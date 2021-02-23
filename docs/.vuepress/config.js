@@ -2,6 +2,7 @@ module.exports = {
   title: 'Hello Qubo',
   description: 'Just playing around',
   head: ['link', { rel: 'icon', href: '/avatar.png' }],
+  base: '/homepage/',
   themeConfig: {
     logo: '/avatar.png',
     nav: [
