@@ -1,18 +1,8 @@
 ---
 sidebar: auto
-sidebarDepth: 2
+sidebarDepth: 1
 ---
 
-# Hello Guide
+# [如何在 Mac/Windows/Ubuntu 上搭建基于 Typescript 的全栈开发环境](/development-env/)
 
-## 1.1
-
-## 1.2
-
-# Chapter One
-
-[One](../page-a/one.md)
-
-# Chapter Two
-
-# Chapter Three
+# [Vue3 与 Vue2 对比](/vue3/)

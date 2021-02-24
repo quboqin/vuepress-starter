@@ -2,15 +2,15 @@
 home: true
 heroImage: /logo.png
 heroText: Qubo's Blog
-tagline: Follow the master
+tagline: Stay Hungry Stay Foolish
 actionText: Get Started →
 actionLink: /guide/
 features:
-  - title: Simplicity First
-    details: Minimal setup with markdown-centered project structure helps you focus on writing.
-  - title: Vue-Powered
-    details: Enjoy the dev experience of Vue + webpack, use Vue components in markdown, and develop custom themes with Vue.
-  - title: Performant
-    details: VuePress generates pre-rendered static HTML for each page, and runs as an SPA once a page is loaded.
+  - title: DevOps Model Defined
+    details: DevOps is the combination of cultural philosophies, practices, and tools that increases an organization’s ability to deliver applications and services at high velocity evolving and improving products at a faster pace than organizations using traditional software development and infrastructure management processes. This speed enables organizations to better serve their customers and compete more effectively in the market.
+  - title: AWS Certified Solution Architect
+    details: I have been interested in expanding my knowledge as an IT solution architect from applications to infrastructure, so I decided to prepare for the Amazon Web Services Certified Solution Architect Associate exam which is one of the most important and widely recognized certificates in the IT industry. I wanted to share my methodology for successfully preparing for the exam and thereby assist others on this journey.
+  - title: Full Stack
+    details: A full stack web developer is a person who can develop both client and server software.
 footer: MIT Licensed | Copyright © 2020-present Qubo Qin
 ---
