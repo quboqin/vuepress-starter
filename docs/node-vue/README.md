@@ -1,15 +1,20 @@
-## 在Ubuntu环境下安装NVM和Node.js
+# 安装Node.js和Vue开发环境
 ### 安装NVM和Node.js
-``` zsh
+install or update nvm
+``` bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
 ```
+install long term support version
+``` bash
+nvm install --lts
+```
 ### 安装Vue-cli
-``` zsh
+``` bash
 npm install -g @vue/cli
 ```
 ### 设置git和ssh
 ### 创建一个Vue3的程序
-``` zsh
+``` bash
 vue create hello-world
 ```
 ![new-project](./cli-new-project.png)

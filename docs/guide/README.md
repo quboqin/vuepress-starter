@@ -8,3 +8,5 @@ sidebar: auto
 
 ### [Create a Node.js and Vue.js](/node-vue/)
 
+### [Vuepress](/vuepress/)
+
