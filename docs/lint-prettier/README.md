@@ -1,1 +1,0 @@
-## Lint and Prettier in VSCode
