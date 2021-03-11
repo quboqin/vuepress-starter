@@ -10,3 +10,5 @@ sidebar: auto
 
 ### [Vuepress](/vuepress/)
 
+### [OpenWRT](/openwrt/)
+
