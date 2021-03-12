@@ -46,6 +46,59 @@ feeds/luci/modules/luci-base/root/etc/config/luci      #修改默认语言和主
 ## menuconfig的配置
 一个excel维护的配置清单[OpenWRT编译make menuconfig配置及LUCI插件说明.xlsx](https://www.wil.ink/links/799)
 
+### 配置Newifi D2
+1. 设置目标平台
+![target](./target-subtarget-targetprofile.png)
+
+2. 指定image类型
+![image](./target-images.png)
+
+3. 基本配置
+![blockd](./basesystem-blockd.png)
+![dnsmasq-full](./basesystem-dnsmasq-full.png)
+![admin-htop](./admin-htop.png)
+
+4. USB和无线网络驱动
+![USB](./usbsupport-kmodusb2.png)
+![Wireless](./wirelessdrivers-kmodmt7603-mt76x2.png)
+
+5. Luci
+```
+luci-app-accesscontrol 上网时间控制
+luci-app-adbyby-plus 广告屏蔽大师Plus +
+luci-app-amule         电驴下载
+luci-app-aria2         Aria2下载
+luci-app-arpbind IP/MAC绑定
+luci-app-ddns         动态域名解析
+luci-app-flowoffload Turbo ACC  FLOW转发加速
+luci-app-frpc         内网穿透 Frp
+luci-app-hd-idle 硬盘休眠
+luci-app-ipsec-vpnd  IPSec服务端
+luci-app-mwan3         MWAN负载均衡
+luci-app-nlbwmon 网络带宽监视器
+luci-app-openvpn OpenVPN客户端
+uci-app-openvpn-server OpenVPN服务端
+luci-app-pptp-server  PPTP服务端
+luci-app-ramfree 释放内存
+luci-app-samba         网络共享(samba)
+luci-app-sfe         Turbo ACC网络加速(开启Fast Path转发加速)
+luci-app-sqm         流量智能队列管理(QOS)
+luci-app-ssr-plus SSR Plus，翻墙3合一工具
+luci-app-transmission BT下载
+luci-app-upnp         通用即插即用UPnP(端口自动转发)
+luci-app-usb-printer USB 打印服务器
+luci-app-vlmcsd         KMS服务器（WIN VLK 激活工具）
+luci-app-vsftpd         FTP服务器
+luci-app-webadmin Web管理
+luci-app-wireguard VPN服务器 WireGuard状态
+luci-app-wol         网络唤醒
+luci-app-wrtbwmon 实时流量监测
+```
+
+6. 其他
+![ddns](./ipaddress-and-names-ddns-scripts-no-ip.png)
+![download](./bittorrent-transmissionweb.png)
+
 ## OpenWRT在本地Linux下编译
 
 ### 编译Lienol源
@@ -82,6 +135,8 @@ make -j1 V=s
 可以从本地的编译环境提取.config配置文件，放在[build-openwrt](git@github.com:quboqin/build-openwrt.git)
 或者需要 SSH 连接则把SSH connection to Actions的值改为true
 点击 Actions
+### 创建多个workflow，同时编译两个平台
+
 ## 刷入固件的方法
 1. DiskImage直接刷写
 制作一个PE盘，把DiskImage和LEDE固件拷贝到PE盘，插到路由上，启动PE，然后和方法一差不多，打开DiskImage，选择软路由上的那块硬盘，选择OpenWrt.img，点开始，等进度条结束，然后关机，拔掉U盘，再开机就可以了
