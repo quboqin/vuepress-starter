@@ -131,6 +131,27 @@ find dl -size -1024c -exec ls -l {} \;  #检查文件完整性
 make -j1 V=s
 ```
 
+### 再次编译
+```
+make clean             #清除旧的编译产物（可选）
+#在源码有大规模更新或者内核更新后执行，以保证编译质量。此操作会删除/bin和/build_dir目录中的文件。
+
+make dirclean             #清除旧的编译产物、交叉编译工具及工具链等目录（可选）
+#更换架构编译前必须执行。此操作会删除/bin和/build_dir目录的中的文件(make clean)以及/staging_dir、/toolchain、/tmp和/logs中的文件。
+
+make distclean            #清除 Open­Wrt 源码以外的文件（可选）
+#除非是做开发，并打算 push 到 GitHub 这样的远程仓库，否则几乎用不到。此操作相当于make dirclean外加删除/dl、/feeds目录和.config文件。
+
+git clean -xdf            #还原 Open­Wrt 源码到初始状态（可选）
+#如果把源码改坏了，或者长时间没有进行编译时使用。
+
+rm -rf tmp                #清除编译缓存
+#此操作据说可防止make menuconfig加载错误，暂时没遇到过，如有错误欢迎大佬指正。
+
+rm -f .config             #删除配置文件（可选）
+#可以理解为恢复默认配置，建议切换架构编译前执行。
+```
+
 ## 使用Github Action编译OpenWRT
 可以从本地的编译环境提取.config配置文件，放在[build-openwrt](git@github.com:quboqin/build-openwrt.git)
 或者需要 SSH 连接则把SSH connection to Actions的值改为true

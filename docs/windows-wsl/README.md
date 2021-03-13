@@ -31,6 +31,10 @@ chsh -s /bin/zsh
 ```
 重启WSL
 
+``` bash
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+```
+
 ### 修改.zshrc的新主题
 ``` zsh
 vi ~/.zshrc
