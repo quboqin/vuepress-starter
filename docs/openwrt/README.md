@@ -1,28 +1,36 @@
-# 编译OpenWRT
+# 编译 OpenWRT
 
-## OpenWRT历史
+## OpenWRT 历史
+
 ![The History of OpenWRT](./openwrt.png)
-1. 基于Linux的开源项目
-2. 丰富的插件可以扩展
-3. 主流的路由器厂商也都是基于OpennWRT开发的路由器固件
 
-## OpenWRT目录结构
-1. feeds.conf.default中制定扩展的软件包, 例如lean的版本中没有Passwall, 可以在这个文件中添加
+1. 基于 Linux 的开源项目
+2. 丰富的插件可以扩展
+3. 主流的路由器厂商也都是基于 OpennWRT 开发的路由器固件
+
+## OpenWRT 目录结构
+
+1. feeds.conf.default 中制定扩展的软件包, 例如 lean 的版本中没有 Passwall, 可以在这个文件中添加
+
 ```
 #src-git helloworld https://github.com/fw876/helloworld
 src-git lienol https://github.com/kenzok8/openwrt-packages
 src-git small https://github.com/kenzok8/small.git
 ```
+
 然后更新和安装添加的软件包
-``` bash
+
+```bash
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 ```
-2. .config是由make menuconfig生成的
-3. bin/targets/x86/64包含了最后生成的固件
-在下载openwrt系统时，经常能看到initramfs-kernel.bin，squashfs-factory.bin，squashfs-sysupgrade.bin等结尾的文件，factory适用于从原厂系统刷到openwrt，sysupgrade则是从openwrt刷到openwrt（已经是openwrt系统，在openwrt系统中更新自己），squashfs则是一种文件系统，适用于嵌入式设备。那么initramfs-kernel又是什么呢。
 
-initramfs是放在内存RAM中的rootfs 映像文件，跟kernel放在一起。一般来说用不到initramfs-kernel.bin来刷机，因为启动后，所有的配置在路由器重启后都不能保留（毕竟ram文件系统，所有文件放在ram中，断电就没了）。但也有用到initramfs-kernel.bin的时候，就是在移植openwrt系统的时候，没有设备上的flash闪存的驱动的时候。
+2. .config 是由 make menuconfig 生成的
+3. bin/targets/x86/64 包含了最后生成的固件
+   在下载 openwrt 系统时，经常能看到 initramfs-kernel.bin，squashfs-factory.bin，squashfs-sysupgrade.bin 等结尾的文件，factory 适用于从原厂系统刷到 openwrt，sysupgrade 则是从 openwrt 刷到 openwrt（已经是 openwrt 系统，在 openwrt 系统中更新自己），squashfs 则是一种文件系统，适用于嵌入式设备。那么 initramfs-kernel 又是什么呢。
+
+initramfs 是放在内存 RAM 中的 rootfs 映像文件，跟 kernel 放在一起。一般来说用不到 initramfs-kernel.bin 来刷机，因为启动后，所有的配置在路由器重启后都不能保留（毕竟 ram 文件系统，所有文件放在 ram 中，断电就没了）。但也有用到 initramfs-kernel.bin 的时候，就是在移植 openwrt 系统的时候，没有设备上的 flash 闪存的驱动的时候。
+
 ```
 一些常见的配置文件路径：
 \etc\config         #各个LUCI配置
@@ -34,35 +42,41 @@ initramfs是放在内存RAM中的rootfs 映像文件，跟kernel放在一起。�
 ```
 
 4. 默认配置
+
 ```
 package/lean/default-settings/files/zzz-default-settings    #默认设置
 package/lean/default-settings/files/bin/config_generate    #网络配置
 feeds/luci/modules/luci-base/root/etc/config/luci      #修改默认语言和主题
 ```
-也可以参考[](#使用Github Action编译OpenWRT)中的diy-part2.sh
+
+也可以参考[](#使用 Github Action 编译 OpenWRT)中的 diy-part2.sh
 
 5. 保留配置
-步骤： 1.提取路由固件下的\etc\config\network 2.在编译机OpenWrt根目录下创建files目录 3.拷贝到\files\etc\config\network 这样编译完，network就是你自己配置好的network，注意提取的文件路径和权限要一致
-## menuconfig的配置
-一个excel维护的配置清单[OpenWRT编译make menuconfig配置及LUCI插件说明.xlsx](https://www.wil.ink/links/799)
+   步骤： 1.提取路由固件下的\etc\config\network 2.在编译机 OpenWrt 根目录下创建 files 目录 3.拷贝到\files\etc\config\network 这样编译完，network 就是你自己配置好的 network，注意提取的文件路径和权限要一致
 
-### 配置Newifi D2
+## menuconfig 的配置
+
+一个 excel 维护的配置清单[OpenWRT 编译 make menuconfig 配置及 LUCI 插件说明.xlsx](https://www.wil.ink/links/799)
+
+### 配置 Newifi D2
+
 1. 设置目标平台
-![target](./target-subtarget-targetprofile.png)
+   ![target](./target-subtarget-targetprofile.png)
 
-2. 指定image类型
-![image](./target-images.png)
+2. 指定 image 类型
+   ![image](./target-images.png)
 
 3. 基本配置
-![blockd](./basesystem-blockd.png)
-![dnsmasq-full](./basesystem-dnsmasq-full.png)
-![admin-htop](./admin-htop.png)
+   ![blockd](./basesystem-blockd.png)
+   ![dnsmasq-full](./basesystem-dnsmasq-full.png)
+   ![admin-htop](./admin-htop.png)
 
-4. USB和无线网络驱动
-![USB](./usbsupport-kmodusb2.png)
-![Wireless](./wirelessdrivers-kmodmt7603-mt76x2.png)
+4. USB 和无线网络驱动
+   ![USB](./usbsupport-kmodusb2.png)
+   ![Wireless](./wirelessdrivers-kmodmt7603-mt76x2.png)
 
 5. Luci
+
 ```
 luci-app-accesscontrol 上网时间控制
 luci-app-adbyby-plus 广告屏蔽大师Plus +
@@ -96,22 +110,24 @@ luci-app-wrtbwmon 实时流量监测
 ```
 
 6. 其他
-![ddns](./ipaddress-and-names-ddns-scripts-no-ip.png)
-![download](./bittorrent-transmissionweb.png)
+   ![ddns](./ipaddress-and-names-ddns-scripts-no-ip.png)
+   ![download](./bittorrent-transmissionweb.png)
 
-## OpenWRT在本地Linux下编译
+## OpenWRT 在本地 Linux 下编译
 
-### 编译Lienol源
+### 编译 Lienol 源
 
-### 编译Lean源
-``` bash
+### 编译 Lean 源
+
+```bash
 sudo apt-get update
 sudo apt-get -y install build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch python3 python2.7 unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs git-core gcc-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler g++-multilib antlr3 gperf wget curl swig rsync
 ```
 
 git clone https://github.com/coolsnowwolf/lede.git lean
 
-编辑feeds.conf.default
+编辑 feeds.conf.default
+
 ```
 #src-git helloworld https://github.com/fw876/helloworld
 src-git lienol https://github.com/kenzok8/openwrt-packages
@@ -132,6 +148,7 @@ make -j1 V=s
 ```
 
 ### 再次编译
+
 ```
 make clean             #清除旧的编译产物（可选）
 #在源码有大规模更新或者内核更新后执行，以保证编译质量。此操作会删除/bin和/build_dir目录中的文件。
@@ -152,17 +169,37 @@ rm -f .config             #删除配置文件（可选）
 #可以理解为恢复默认配置，建议切换架构编译前执行。
 ```
 
-## 使用Github Action编译OpenWRT
-可以从本地的编译环境提取.config配置文件，放在[build-openwrt](git@github.com:quboqin/build-openwrt.git)
-或者需要 SSH 连接则把SSH connection to Actions的值改为true
+## 使用 Github Action 编译 OpenWRT
+
+可以从本地的编译环境提取.config 配置文件，放在[build-openwrt](git@github.com:quboqin/build-openwrt.git)
+或者需要 SSH 连接则把 SSH connection to Actions 的值改为 true
 点击 Actions
-### 创建多个workflow，同时编译两个平台
+
+### 创建多个 workflow，同时编译两个平台
 
 ## 刷入固件的方法
-1. DiskImage直接刷写
-制作一个PE盘，把DiskImage和LEDE固件拷贝到PE盘，插到路由上，启动PE，然后和方法一差不多，打开DiskImage，选择软路由上的那块硬盘，选择OpenWrt.img，点开始，等进度条结束，然后关机，拔掉U盘，再开机就可以了
-2. 用physdiskwrite刷写
-刷写方法：制作一个PE盘，把physdiskwrite和LEDE固件拷贝到PE盘（同一个目录下，建议放在根目录，就是打开U盘就能看到的那个目录），插到路由上，启动PE，然后查看下存放固件的盘符（这里举例为U:盘），打开cmd（不懂的就按Win建+r键，输入cmd回车，Win键就是键盘左下方是Windows图标的那个按键）
-　　输入U: （回车确定，切换到U盘的目录）
-　　输入physdiskwrite -u OpenWrt.img（回车确定）
-　　然后会显示目前检测到的硬盘，输入0或者1选择要刷写到哪个盘（看容量，选择硬盘的那个编号），按Y确定，之后等待刷写结束就可以了，然后关机，拔掉U盘，再开机就可以了.
+
+1. DiskImage 直接刷写
+   制作一个 PE 盘，把 DiskImage 和 LEDE 固件拷贝到 PE 盘，插到路由上，启动 PE，然后和方法一差不多，打开 DiskImage，选择软路由上的那块硬盘，选择 OpenWrt.img，点开始，等进度条结束，然后关机，拔掉 U 盘，再开机就可以了
+2. 用 physdiskwrite 刷写
+   刷写方法：制作一个 PE 盘，把 physdiskwrite 和 LEDE 固件拷贝到 PE 盘（同一个目录下，建议放在根目录，就是打开 U 盘就能看到的那个目录），插到路由上，启动 PE，然后查看下存放固件的盘符（这里举例为 U:盘），打开 cmd（不懂的就按 Win 建+r 键，输入 cmd 回车，Win 键就是键盘左下方是 Windows 图标的那个按键）
+   　　输入 U: （回车确定，切换到 U 盘的目录）
+   　　输入 physdiskwrite -u OpenWrt.img（回车确定）
+   　　然后会显示目前检测到的硬盘，输入 0 或者 1 选择要刷写到哪个盘（看容量，选择硬盘的那个编号），按 Y 确定，之后等待刷写结束就可以了，然后关机，拔掉 U 盘，再开机就可以了.
+
+## 配置 OpenWRT
+
+### DNS
+
+1. 安装 dig
+
+```shell
+opkg update && opkg install bind-dig bind-libs
+```
+
+2. 查看端口
+
+```shell
+netstat -tunlp
+lsof -i:53
+```
