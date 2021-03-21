@@ -191,6 +191,13 @@ rm -f .config             #删除配置文件（可选）
 
 ### DNS
 
+0. clean DNS
+   @Macos
+   sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder
+
+   @Windows10
+   ipconfig /flushdns
+
 1. 安装 dig
 
 ```shell
