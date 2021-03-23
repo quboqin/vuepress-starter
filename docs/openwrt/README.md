@@ -189,24 +189,81 @@ rm -f .config             #删除配置文件（可选）
 
 ## 配置 OpenWRT
 
-### DNS
+### 配置网口
+1. 单臂路由，配置LAN口
+a. 协议设置为“静态地址”，设置静态地址，子网掩码，网关和广播地址
+b. 设置自定义的DNS服务器
+```
+127.0.0.1
+223.5.5.5
+8.8.8.8
+192.168.123.2
+```
+c. 设置DHCP服务器，单臂路由强制使用此网络上的DHCP
+d. 物理设置，多网口“为指定接口创建桥接”
+2. 拨号主路由，配置LAN口和WAN口
 
-0. clean DNS
+### 配置防火墙
+a. 添加“自定义规则”
+```
+# This file is interpreted as shell script.
+# Put your custom iptables rules here, they will
+# be executed with each firewall (re-)start.
+
+# Internal uci firewall chains are flushed and recreated on reload, so
+# put custom rules into the root chains e.g. INPUT or FORWARD or into the
+# special user chains, e.g. input_wan_rule or postrouting_lan_rule.
+iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53
+iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 53
+iptables -t nat -I POSTROUTING -j MASQUERADE
+```
+
+b. 端口转发，将NAS的WEB端口(5000)和SMB端口(137/138/139/445)，转发到NAS服务器
+
+### 开启Turbo ACC网络加速
+a. 开启DNS加速(可选)
+会改变DHCP/DNS设置中的“DNS转发”
+
+### 检查DHCP/DNS设置
+详见[Lean OpenWrt DNS解析流程研究](https://renyili.org/post/openwrt_dns_process/)
+![DNS](./dns.png)
+
+### 启动UPnP
+
+### 设置Passwall
+a. 设置DNS
+有ChinaDNS-NG，可以开启ChinaDNS-NG，但是这样就不需要Turbo ACC网络加速中的DNS加速了
+配置ChinaDNS-NG的解析本地和白名单的(UDP) 116.228.111.118
+
+b. 配置pdnsd
+
+### 排除DNS问题
+1. clean DNS
    @Macos
    sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder
 
    @Windows10
    ipconfig /flushdns
 
-1. 安装 dig
+2. 安装 dig
 
 ```shell
 opkg update && opkg install bind-dig bind-libs
 ```
 
-2. 查看端口
+3. 查看端口
 
 ```shell
 netstat -tunlp
 lsof -i:53
 ```
+
+4. 使用dig
+```
+dig www.google.com
+dig @8.8.8.8 www.google.com
+dig @127.0.0.1 -p 53 www.google.com
+dig www.google.com +trace
+```
+
+5. 使用nslookup
