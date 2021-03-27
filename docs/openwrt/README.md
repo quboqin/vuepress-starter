@@ -295,3 +295,11 @@ b. BBR加速脚本集合。包含BBR Plus/BBR原版/BBR魔改版，开启自带B
 [BBR加速脚本集合](https://www.v2rayssr.com/bbr.html)
 
 c. windows环境下安装Winxray，关闭Mcafee报警
+
+
+### 刷机新路由D2
+1. 重置Breed
+按住Reset不放，将电源再次连接，等待10s后，松开Reset，路由器进入Breed模式
+在浏览器中访问192.168.1.1
+
+2. 刷入Openwrt固件
