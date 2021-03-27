@@ -186,27 +186,32 @@ rm -f .config             #删除配置文件（可选）
    　　输入 U: （回车确定，切换到 U 盘的目录）
    　　输入 physdiskwrite -u OpenWrt.img（回车确定）
    　　然后会显示目前检测到的硬盘，输入 0 或者 1 选择要刷写到哪个盘（看容量，选择硬盘的那个编号），按 Y 确定，之后等待刷写结束就可以了，然后关机，拔掉 U 盘，再开机就可以了.
-3. 修改ip地址
+3. 修改 ip 地址
+
 ```
 vi /etc/config/network
-```   
+```
 
 ## 配置 OpenWRT
 
 ### 配置网口
-1. 单臂路由，配置LAN口
-a. 不要删除wan/wan6接口
-b. 协议设置为“静态地址”，设置静态地址，子网掩码，网关和广播地址
-c. 设置自定义的DNS服务器, 指向主路由
+
+1. 单臂路由，配置 LAN 口
+   a. 不要删除 wan/wan6 接口
+   b. 协议设置为“静态地址”，设置静态地址，子网掩码，网关和广播地址
+   c. 设置自定义的 DNS 服务器, 指向主路由
+
 ```
 192.168.123.2
 ```
+
 ![接口设置](./general-setting.png)
 d. 关闭桥接，需要重新选择接口
 ![关闭桥接](./close-bridge.png)
 以上操作不要按’保存及应用‘，只要保存
 
 e. 配置防火墙, 添加“自定义规则”
+
 ```
 # This file is interpreted as shell script.
 # Put your custom iptables rules here, they will
@@ -219,44 +224,51 @@ iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53
 iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 53
 iptables -t nat -I POSTROUTING -j MASQUERADE
 ```
+
 重启防火墙，并’保存及应用‘
-f. 设置DHCP服务器，单臂路由强制使用此网络上的DHCP，关闭主路由DHCP
-如果主路由可以设置gateway，则不需要，只要将主从路由gateway互指
+f. 设置 DHCP 服务器，单臂路由强制使用此网络上的 DHCP，关闭主路由 DHCP
+如果主路由可以设置 gateway，则不需要，只要将主从路由 gateway 互指
 
-### NAS的设置
-a. 端口转发，将NAS的SSH, WEB端口(5000)和SMB端口(137/138/139/445)，转发到NAS服务器
-![nas-port](./nas-port.png)
+### NAS 的设置
 
-b. 设置NAS的DNS
+a. 端口转发，将 NAS 的 SSH, WEB 端口(5000)和 SMB 端口(137/138/139/445)，转发到 NAS 服务器
+![ax3600-port](./ax3600-port-forward.png)
+![nas-port](./nas-port-forward.png)
+
+b. 设置 NAS 的 DNS
 ![NAS DNS](./nas-dns.png)
 
-c. 设置NAS的网卡
+c. 设置 NAS 的网卡
 ![NAS Interface](./nas-interface.png)
 
-d. 添加主路由到NAS Allow List
+d. 添加主路由到 NAS Allow List
 ![allow-list](./nas-allow-list.png)
 
-### 开启Turbo ACC网络加速
-a. 开启DNS加速(可选)
-会改变DHCP/DNS设置中的“DNS转发”
+### 开启 Turbo ACC 网络加速
 
-### 检查DHCP/DNS设置
-详见[Lean OpenWrt DNS解析流程研究](https://renyili.org/post/openwrt_dns_process/)
+a. 开启 DNS 加速(可选)
+会改变 DHCP/DNS 设置中的“DNS 转发”
+
+### 检查 DHCP/DNS 设置
+
+详见[Lean OpenWrt DNS 解析流程研究](https://renyili.org/post/openwrt_dns_process/)
 ![DNS](./dns.png)
 
-### 启动UPnP
+### 启动 UPnP
 
-### 设置Passwall
-a. 设置DNS
-有ChinaDNS-NG，可以开启ChinaDNS-NG，但是这样就不需要Turbo ACC网络加速中的DNS加速了
-配置ChinaDNS-NG的解析本地和白名单的(UDP) 116.228.111.118
+### 设置 Passwall
 
-b. 配置pdnsd
+a. 设置 DNS
+有 ChinaDNS-NG，可以开启 ChinaDNS-NG，但是这样就不需要 Turbo ACC 网络加速中的 DNS 加速了
+配置 ChinaDNS-NG 的解析本地和白名单的(UDP) 116.228.111.118
 
-c. 将NAS的IP地址添加到Passwall的发访控制中
+b. 配置 pdnsd
+
+c. 将 NAS 的 IP 地址添加到 Passwall 的发访控制中
 ![NAS访问控制](./access-control.png)
 
-### 排除DNS问题
+### 排除 DNS 问题
+
 1. clean DNS
    @Macos
    sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder
@@ -277,7 +289,8 @@ netstat -tunlp
 lsof -i:53
 ```
 
-4. 使用dig
+4. 使用 dig
+
 ```
 dig www.google.com
 dig @8.8.8.8 www.google.com
@@ -285,21 +298,22 @@ dig @127.0.0.1 -p 53 www.google.com
 dig www.google.com +trace
 ```
 
-5. 使用nslookup
+5. 使用 nslookup
 
-### 安装VPS
-a. 安装7合1脚本
-[快速部署Xray V2ray SS Trojan Trojan-go七合一共存一键脚本+伪装博客](https://wxf2088.xyz/2321.html)
+### 安装 VPS
 
-b. BBR加速脚本集合。包含BBR Plus/BBR原版/BBR魔改版，开启自带BBR加速，BBR四合一脚本等。
-[BBR加速脚本集合](https://www.v2rayssr.com/bbr.html)
+a. 安装 7 合 1 脚本
+[快速部署 Xray V2ray SS Trojan Trojan-go 七合一共存一键脚本+伪装博客](https://wxf2088.xyz/2321.html)
 
-c. windows环境下安装Winxray，关闭Mcafee报警
+b. BBR 加速脚本集合。包含 BBR Plus/BBR 原版/BBR 魔改版，开启自带 BBR 加速，BBR 四合一脚本等。
+[BBR 加速脚本集合](https://www.v2rayssr.com/bbr.html)
 
+c. windows 环境下安装 Winxray，关闭 Mcafee 报警
 
-### 刷机新路由D2
-1. 重置Breed
-按住Reset不放，将电源再次连接，等待10s后，松开Reset，路由器进入Breed模式
-在浏览器中访问192.168.1.1
+### 刷机新路由 D2
 
-2. 刷入Openwrt固件
+1. 重置 Breed
+   按住 Reset 不放，将电源再次连接，等待 10s 后，松开 Reset，路由器进入 Breed 模式
+   在浏览器中访问 192.168.1.1
+
+2. 刷入 Openwrt 固件
