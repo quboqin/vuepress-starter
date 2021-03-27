@@ -186,26 +186,27 @@ rm -f .config             #删除配置文件（可选）
    　　输入 U: （回车确定，切换到 U 盘的目录）
    　　输入 physdiskwrite -u OpenWrt.img（回车确定）
    　　然后会显示目前检测到的硬盘，输入 0 或者 1 选择要刷写到哪个盘（看容量，选择硬盘的那个编号），按 Y 确定，之后等待刷写结束就可以了，然后关机，拔掉 U 盘，再开机就可以了.
+3. 修改ip地址
+```
+vi /etc/config/network
+```   
 
 ## 配置 OpenWRT
 
 ### 配置网口
 1. 单臂路由，配置LAN口
-a. 协议设置为“静态地址”，设置静态地址，子网掩码，网关和广播地址
-b. 设置自定义的DNS服务器
+a. 不要删除wan/wan6接口
+b. 协议设置为“静态地址”，设置静态地址，子网掩码，网关和广播地址
+c. 设置自定义的DNS服务器, 指向主路由
 ```
-127.0.0.1
-223.5.5.5
-8.8.8.8
 192.168.123.2
 ```
-c. 设置DHCP服务器，单臂路由强制使用此网络上的DHCP
-d. 物理设置，多网口“为指定接口创建桥接”
-! 在【物理设置】中，需要取消勾选【桥接接口】的选项，然后选择到您的LAN硬件接口
-2. 拨号主路由，配置LAN口和WAN口
+![接口设置](./general-setting.png)
+d. 关闭桥接，需要重新选择接口
+![关闭桥接](./close-bridge.png)
+以上操作不要按’保存及应用‘，只要保存
 
-### 配置防火墙
-a. 添加“自定义规则”
+e. 配置防火墙, 添加“自定义规则”
 ```
 # This file is interpreted as shell script.
 # Put your custom iptables rules here, they will
@@ -218,8 +219,22 @@ iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53
 iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 53
 iptables -t nat -I POSTROUTING -j MASQUERADE
 ```
+重启防火墙，并’保存及应用‘
+f. 设置DHCP服务器，单臂路由强制使用此网络上的DHCP，关闭主路由DHCP
+如果主路由可以设置gateway，则不需要，只要将主从路由gateway互指
 
-b. 端口转发，将NAS的WEB端口(5000)和SMB端口(137/138/139/445)，转发到NAS服务器
+### NAS的设置
+a. 端口转发，将NAS的SSH, WEB端口(5000)和SMB端口(137/138/139/445)，转发到NAS服务器
+![nas-port](./nas-port.png)
+
+b. 设置NAS的DNS
+![NAS DNS](./nas-dns.png)
+
+c. 设置NAS的网卡
+![NAS Interface](./nas-interface.png)
+
+d. 添加主路由到NAS Allow List
+![allow-list](./nas-allow-list.png)
 
 ### 开启Turbo ACC网络加速
 a. 开启DNS加速(可选)
@@ -237,6 +252,9 @@ a. 设置DNS
 配置ChinaDNS-NG的解析本地和白名单的(UDP) 116.228.111.118
 
 b. 配置pdnsd
+
+c. 将NAS的IP地址添加到Passwall的发访控制中
+![NAS访问控制](./access-control.png)
 
 ### 排除DNS问题
 1. clean DNS
@@ -269,4 +287,11 @@ dig www.google.com +trace
 
 5. 使用nslookup
 
-## 关闭主路由的DHCP
+### 安装VPS
+a. 安装7合1脚本
+[快速部署Xray V2ray SS Trojan Trojan-go七合一共存一键脚本+伪装博客](https://wxf2088.xyz/2321.html)
+
+b. BBR加速脚本集合。包含BBR Plus/BBR原版/BBR魔改版，开启自带BBR加速，BBR四合一脚本等。
+[BBR加速脚本集合](https://www.v2rayssr.com/bbr.html)
+
+c. windows环境下安装Winxray，关闭Mcafee报警
