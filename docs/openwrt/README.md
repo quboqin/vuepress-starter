@@ -74,7 +74,8 @@ feeds/luci/modules/luci-base/root/etc/config/luci      #修改默认语言和主
 4. USB 和无线网络驱动
    ![USB](./usbsupport-kmodusb2.png)
    ![Wireless](./wirelessdrivers-kmodmt7603-mt76x2.png)
-
+kmod-mt7603与kmod-mt7603e冲突
+kmod-mt76x2与kmod-mt76x2e冲突
 5. Luci
 
 ```
@@ -112,6 +113,8 @@ luci-app-wrtbwmon 实时流量监测
 6. 其他
    ![ddns](./ipaddress-and-names-ddns-scripts-no-ip.png)
    ![download](./bittorrent-transmissionweb.png)
+
+   transmission-web与transmission-web-control冲突
 
 ## OpenWRT 在本地 Linux 下编译
 
