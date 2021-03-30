@@ -344,3 +344,5 @@ dig www.google.com +trace
 3. iOS下用美国账号安装Shadowrocket
 4. Android下的客户端
 
+### DDNS的申请和配置, 花生壳和Windows远程服务
+
