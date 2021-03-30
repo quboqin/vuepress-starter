@@ -1,6 +1,7 @@
-# 编译 OpenWRT
+# Greate Wall
 
-## OpenWRT 历史
+## OpenWrt
+### OpenWRT 历史
 
 ![The History of OpenWRT](./openwrt.png)
 
@@ -8,7 +9,7 @@
 2. 丰富的插件可以扩展
 3. 主流的路由器厂商也都是基于 OpennWRT 开发的路由器固件
 
-## OpenWRT 目录结构
+### OpenWRT 目录结构及重要文件
 
 1. feeds.conf.default 中制定扩展的软件包, 例如 lean 的版本中没有 Passwall, 可以在这个文件中添加
 
@@ -27,56 +28,54 @@ src-git small https://github.com/kenzok8/small.git
 
 2. .config 是由 make menuconfig 生成的
 3. bin/targets/x86/64 包含了最后生成的固件
-   在下载 openwrt 系统时，经常能看到 initramfs-kernel.bin，squashfs-factory.bin，squashfs-sysupgrade.bin 等结尾的文件，factory 适用于从原厂系统刷到 openwrt，sysupgrade 则是从 openwrt 刷到 openwrt（已经是 openwrt 系统，在 openwrt 系统中更新自己），squashfs 则是一种文件系统，适用于嵌入式设备。那么 initramfs-kernel 又是什么呢。
-
-initramfs 是放在内存 RAM 中的 rootfs 映像文件，跟 kernel 放在一起。一般来说用不到 initramfs-kernel.bin 来刷机，因为启动后，所有的配置在路由器重启后都不能保留（毕竟 ram 文件系统，所有文件放在 ram 中，断电就没了）。但也有用到 initramfs-kernel.bin 的时候，就是在移植 openwrt 系统的时候，没有设备上的 flash 闪存的驱动的时候。
-
-```
-一些常见的配置文件路径：
-\etc\config         #各个LUCI配置
-\etc\gfwlist        #gfwlist目录
-\etc\shadow         #登录密码
-\etc\firewall.user  #自定义防火墙规则
-\usr\share\adbyby   #adbyby里的相关规则和设置
-\usr\lib\lua\luci\view\admin_status\index.htm #主页样式文件，温度显示等等
-```
+   在下载 openwrt 系统时，经常能看到 initramfs-kernel.bin，squashfs-factory.bin，squashfs-sysupgrade.bin 等结尾的文件，factory 适用于从原厂系统刷到 openwrt，sysupgrade 则是从 openwrt 刷到 openwrt（已经是 openwrt 系统，在 openwrt 系统中更新自己），squashfs 则是一种文件系统，适用于嵌入式设备。那么 initramfs-kernel 又是什么呢。initramfs 是放在内存 RAM 中的 rootfs 映像文件，跟 kernel 放在一起。一般来说用不到 initramfs-kernel.bin 来刷机，因为启动后，所有的配置在路由器重启后都不能保留（毕竟 ram 文件系统，所有文件放在 ram 中，断电就没了）。但也有用到 initramfs-kernel.bin 的时候，就是在移植 openwrt 系统的时候，没有设备上的 flash 闪存的驱动的时候。
 
 4. 默认配置
 
 ```
-package/lean/default-settings/files/zzz-default-settings    #默认设置
-package/lean/default-settings/files/bin/config_generate    #网络配置
-feeds/luci/modules/luci-base/root/etc/config/luci      #修改默认语言和主题
+package/lean/default-settings/files/zzz-default-settings #默认设置
+package/lean/default-settings/files/bin/config_generate  #网络配置？在我的目录下没有
+feeds/luci/modules/luci-base/root/etc/config/luci        #修改默认语言和主题
 ```
 
-也可以参考[](#使用 Github Action 编译 OpenWRT)中的 diy-part2.sh
+5. 保留配置的步骤： 
+   1. 提取路由固件下的\etc\config\network 
+   2. 在编译机 OpenWrt 根目录下创建 files 目录 
+   3. 拷贝到files/etc/config/network 这样编译完，network 就是你自己配置好的 network，注意提取的文件路径和权限要一致
 
-5. 保留配置
-   步骤： 1.提取路由固件下的\etc\config\network 2.在编译机 OpenWrt 根目录下创建 files 目录 3.拷贝到\files\etc\config\network 这样编译完，network 就是你自己配置好的 network，注意提取的文件路径和权限要一致
+```
+# 运行环境下的一些常见的配置文件路径：
+/etc/config         #各个LUCI配置
+/etc/gfwlist        #gfwlist目录
+/etc/shadow         #登录密码
+/etc/firewall.user  #自定义防火墙规则
+/usr/share/adbyby   #adbyby里的相关规则和设置
+/usr/lib/lua/luci/view/admin_status/index.htm #主页样式文件，温度显示等等
+```
 
-## menuconfig 的配置
+### menuconfig 的配置，配置 Newifi D2 和 X64
 
 一个 excel 维护的配置清单[OpenWRT 编译 make menuconfig 配置及 LUCI 插件说明.xlsx](https://www.wil.ink/links/799)
-
-### 配置 Newifi D2
 
 1. 设置目标平台
    ![target](./target-subtarget-targetprofile.png)
 
-2. 指定 image 类型
+2. 指定 image 类型，确认选中squashfs
    ![image](./target-images.png)
 
 3. 基本配置
+   Newifi D2确认旋转 blockd, X64不知道要不要选？ 
    ![blockd](./basesystem-blockd.png)
    ![dnsmasq-full](./basesystem-dnsmasq-full.png)
    ![admin-htop](./admin-htop.png)
 
 4. USB 和无线网络驱动
    ![USB](./usbsupport-kmodusb2.png)
+   在Newifi D2 下添加无线网卡   
    ![Wireless](./wirelessdrivers-kmodmt7603-mt76x2.png)
-kmod-mt7603与kmod-mt7603e冲突
-kmod-mt76x2与kmod-mt76x2e冲突
-5. Luci
+   **kmod-mt7603与kmod-mt7603e冲突
+   kmod-mt76x2与kmod-mt76x2e冲突**
+5. 常用Luci模块，根据需要选择
 
 ```
 luci-app-accesscontrol 上网时间控制
@@ -116,19 +115,23 @@ luci-app-wrtbwmon 实时流量监测
 
    transmission-web与transmission-web-control冲突
 
-## OpenWRT 在本地 Linux 下编译
+### OpenWRT 在本地 Linux 下编译
 
-### 编译 Lienol 源
+#### 编译 Lienol 源
 
-### 编译 Lean 源
+#### 编译 Lean 源
+
+1. 更新操作系统和编译器依赖
 
 ```bash
 sudo apt-get update
 sudo apt-get -y install build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch python3 python2.7 unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs git-core gcc-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler g++-multilib antlr3 gperf wget curl swig rsync
 ```
 
+2. 下载源代码
 git clone https://github.com/coolsnowwolf/lede.git lean
 
+3. 添加富强模块
 编辑 feeds.conf.default
 
 ```
@@ -137,6 +140,7 @@ src-git lienol https://github.com/kenzok8/openwrt-packages
 src-git small https://github.com/kenzok8/small.git
 ```
 
+4. 更新添加的模块
 ```
 ./scripts/feeds update -a
 ./scripts/feeds install -a
@@ -144,13 +148,14 @@ make defconfig            #测试编译环境
 make menuconfig           #配置编译
 ```
 
+5. 编译
 ```
 make -j8 download V=s     #预下载
 find dl -size -1024c -exec ls -l {} \;  #检查文件完整性
 make -j1 V=s
 ```
 
-### 再次编译
+#### 再次编译
 
 ```
 make clean             #清除旧的编译产物（可选）
@@ -172,15 +177,15 @@ rm -f .config             #删除配置文件（可选）
 #可以理解为恢复默认配置，建议切换架构编译前执行。
 ```
 
-## 使用 Github Action 编译 OpenWRT
+#### 使用 Github Action 编译 OpenWRT
 
 可以从本地的编译环境提取.config 配置文件，放在[build-openwrt](git@github.com:quboqin/build-openwrt.git)
 或者需要 SSH 连接则把 SSH connection to Actions 的值改为 true
 点击 Actions
 
-### 创建多个 workflow，同时编译两个平台
+##### 创建多个 workflow，同时编译两个平台
 
-## 刷入固件的方法
+### 刷入固件的方法
 
 1. DiskImage 直接刷写
    制作一个 PE 盘，把 DiskImage 和 LEDE 固件拷贝到 PE 盘，插到路由上，启动 PE，然后和方法一差不多，打开 DiskImage，选择软路由上的那块硬盘，选择 OpenWrt.img，点开始，等进度条结束，然后关机，拔掉 U 盘，再开机就可以了
@@ -195,25 +200,35 @@ rm -f .config             #删除配置文件（可选）
 vi /etc/config/network
 ```
 
-## 配置 OpenWRT
+### 刷机新路由 D2
 
-### 配置网口
+1. 重置 Breed
+   按住 Reset 不放，将电源再次连接，等待 10s 后，松开 Reset，路由器进入 Breed 模式
+   在浏览器中访问 192.168.1.1
+
+2. 刷入 Openwrt 固件
+
+### 配置 OpenWRT
+
+#### 主路由的设置
+
+#### 旁路有的设置
 
 1. 单臂路由，配置 LAN 口
-   a. 不要删除 wan/wan6 接口
-   b. 协议设置为“静态地址”，设置静态地址，子网掩码，网关和广播地址
-   c. 设置自定义的 DNS 服务器, 指向主路由
+   1. 不要删除 wan/wan6 接口
+   2. 协议设置为“静态地址”，设置静态地址，子网掩码，网关和广播地址
+   3. 设置自定义的 DNS 服务器, 指向主路由
 
 ```
 192.168.123.2
 ```
 
 ![接口设置](./general-setting.png)
-d. 关闭桥接，需要重新选择接口
+   4. 关闭桥接，需要重新选择接口
 ![关闭桥接](./close-bridge.png)
-以上操作不要按’保存及应用‘，只要保存
+   **以上操作不要按’保存及应用‘，只要保存**
 
-e. 配置防火墙, 添加“自定义规则”
+   5. 配置防火墙, 添加“自定义规则”
 
 ```
 # This file is interpreted as shell script.
@@ -229,48 +244,49 @@ iptables -t nat -I POSTROUTING -j MASQUERADE
 ```
 
 重启防火墙，并’保存及应用‘
-f. 设置 DHCP 服务器，单臂路由强制使用此网络上的 DHCP，关闭主路由 DHCP
-如果主路由可以设置 gateway，则不需要，只要将主从路由 gateway 互指
+   6. 设置 DHCP 服务器，单臂路由强制使用此网络上的 DHCP，关闭主路由 DHCP
+   AX3600作为主路由，新的固件版本可以设置DHCP的DNS和Gateway，主路由可以作为DHCP服务器，网关和DNS设置为旁路由，旁路有的网关指向主路由
 
-### NAS 的设置
-
-a. 端口转发，将 NAS 的 SSH, WEB 端口(5000)和 SMB 端口(137/138/139/445)，转发到 NAS 服务器
-![ax3600-port](./ax3600-port-forward.png)
-![nas-port](./nas-port-forward.png)
-
-b. 设置 NAS 的 DNS
-![NAS DNS](./nas-dns.png)
-
-c. 设置 NAS 的网卡
-![NAS Interface](./nas-interface.png)
-
-d. 添加主路由到 NAS Allow List
-![allow-list](./nas-allow-list.png)
-
-### 开启 Turbo ACC 网络加速
-
-a. 开启 DNS 加速(可选)
+#### 开启 Turbo ACC 网络加速
+1. 开启 DNS 加速(可选)
 会改变 DHCP/DNS 设置中的“DNS 转发”
 
-### 检查 DHCP/DNS 设置
+2. 检查 DHCP/DNS 设置
 
 详见[Lean OpenWrt DNS 解析流程研究](https://renyili.org/post/openwrt_dns_process/)
 ![DNS](./dns.png)
 
-### 启动 UPnP
+#### 启动 UPnP
 
-### 设置 Passwall
+#### 设置 Passwall
 
-a. 设置 DNS
+1. 设置 DNS
 有 ChinaDNS-NG，可以开启 ChinaDNS-NG，但是这样就不需要 Turbo ACC 网络加速中的 DNS 加速了
 配置 ChinaDNS-NG 的解析本地和白名单的(UDP) 116.228.111.118
 
-b. 配置 pdnsd
+2. 配置 pdnsd
 
-c. 将 NAS 的 IP 地址添加到 Passwall 的发访控制中
+3. 将 NAS 的 IP 地址添加到 Passwall 的发访控制中
 ![NAS访问控制](./access-control.png)
 
-### 排除 DNS 问题
+#### NAS 的设置
+
+1. 端口转发，将 NAS 的 SSH, WEB 端口(5000)和 SMB 端口(137/138/139/445)，转发到 NAS 服务器
+![ax3600-port](./ax3600-port-forward.png)
+![nas-port](./nas-port-forward.png)
+
+2. 设置 NAS 的 DNS
+![NAS DNS](./nas-dns.png)
+
+3. 设置 NAS 的网卡
+![NAS Interface](./nas-interface.png)
+
+4. 添加主路由到 NAS Allow List
+![allow-list](./nas-allow-list.png)
+
+
+
+#### 排除 DNS 问题
 
 1. clean DNS
    @Macos
@@ -303,20 +319,28 @@ dig www.google.com +trace
 
 5. 使用 nslookup
 
-### 安装 VPS
+## 安装 VPS
+### 在namecheap上申请域名
 
-a. 安装 7 合 1 脚本
+### 注册cloudflare账号，并将namecheap的域名托管给cloudflare
+
+### 创建VPS
+0. 创建VPS，cloudflare上二级指向该VPS的IP地址
+
+1. 安装 7 合 1 脚本
 [快速部署 Xray V2ray SS Trojan Trojan-go 七合一共存一键脚本+伪装博客](https://wxf2088.xyz/2321.html)
+要填写域名，申请证书
 
-b. BBR 加速脚本集合。包含 BBR Plus/BBR 原版/BBR 魔改版，开启自带 BBR 加速，BBR 四合一脚本等。
+2. BBR 加速脚本集合。包含 BBR Plus/BBR 原版/BBR 魔改版，开启自带 BBR 加速，BBR 四合一脚本等。
 [BBR 加速脚本集合](https://www.v2rayssr.com/bbr.html)
 
-c. windows 环境下安装 Winxray，关闭 Mcafee 报警
+3. 高级模式
+   1. 选择IP
+   2. 在cloudflare上配置worker
 
-### 刷机新路由 D2
+### 客户端安装和配置
+1. windows 环境下安装 Winxray，关闭 Mcafee 报警
+2. Macos下安装Clash for Windows
+3. iOS下用美国账号安装Shadowrocket
+4. Android下的客户端
 
-1. 重置 Breed
-   按住 Reset 不放，将电源再次连接，等待 10s 后，松开 Reset，路由器进入 Breed 模式
-   在浏览器中访问 192.168.1.1
-
-2. 刷入 Openwrt 固件
