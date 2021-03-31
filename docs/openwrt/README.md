@@ -215,6 +215,23 @@ vi /etc/config/network
 
 #### 作为主路由的设置
 
+##### Newifi D2 作为主路由, AX3600 有线中继
+
+1. Newifi D2 作为主路由 设置
+   1. 状态
+      ![newifi-status](./newifi-status.png)
+   2. 修改密码，开启 SSH
+      ![newifi-ssh](./newifi-ssh.png)
+   3. LAN 接口设置，开启 DHCP
+      ![newifi-dhcp](./newifi-dhcp.png)
+   4. WAN 拨号设置
+      ![newifi-wan](./newifi-wan.png)
+   5. DNS 设置，开启 Turbo ACC 网络加速
+      ![newifi-dns-1](./newifi-dns-1.png)
+      ![newifi-dns-2](./newifi-dns-2.png)
+   6. 端口转发
+      ![newifi-port](./newifi-port.png)
+
 #### 作为旁路由的设置
 
 0. 主路由设置
