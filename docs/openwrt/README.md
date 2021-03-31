@@ -1,6 +1,7 @@
 # Greate Wall
 
 ## OpenWrt
+
 ### OpenWRT 历史
 
 ![The History of OpenWRT](./openwrt.png)
@@ -38,10 +39,10 @@ package/lean/default-settings/files/bin/config_generate  #网络配置？在我�
 feeds/luci/modules/luci-base/root/etc/config/luci        #修改默认语言和主题
 ```
 
-5. 保留配置的步骤： 
-   1. 提取路由固件下的\etc\config\network 
-   2. 在编译机 OpenWrt 根目录下创建 files 目录 
-   3. 拷贝到files/etc/config/network 这样编译完，network 就是你自己配置好的 network，注意提取的文件路径和权限要一致
+5. 保留配置的步骤：
+   1. 提取路由固件下的\etc\config\network
+   2. 在编译机 OpenWrt 根目录下创建 files 目录
+   3. 拷贝到 files/etc/config/network 这样编译完，network 就是你自己配置好的 network，注意提取的文件路径和权限要一致
 
 ```
 # 运行环境下的一些常见的配置文件路径：
@@ -60,22 +61,22 @@ feeds/luci/modules/luci-base/root/etc/config/luci        #修改默认语言和�
 1. 设置目标平台
    ![target](./target-subtarget-targetprofile.png)
 
-2. 指定 image 类型，确认选中squashfs
+2. 指定 image 类型，确认选中 squashfs
    ![image](./target-images.png)
 
 3. 基本配置
-   Newifi D2确认旋转 blockd, X64不知道要不要选？ 
+   Newifi D2 确认旋转 blockd, X64 不知道要不要选？
    ![blockd](./basesystem-blockd.png)
    ![dnsmasq-full](./basesystem-dnsmasq-full.png)
    ![admin-htop](./admin-htop.png)
 
 4. USB 和无线网络驱动
    ![USB](./usbsupport-kmodusb2.png)
-   在Newifi D2 下添加无线网卡   
+   在 Newifi D2 下添加无线网卡  
    ![Wireless](./wirelessdrivers-kmodmt7603-mt76x2.png)
-   **kmod-mt7603与kmod-mt7603e冲突
-   kmod-mt76x2与kmod-mt76x2e冲突**
-5. 常用Luci模块，根据需要选择
+   **kmod-mt7603 与 kmod-mt7603e 冲突
+   kmod-mt76x2 与 kmod-mt76x2e 冲突**
+5. 常用 Luci 模块，根据需要选择
 
 ```
 luci-app-accesscontrol 上网时间控制
@@ -113,7 +114,7 @@ luci-app-wrtbwmon 实时流量监测
    ![ddns](./ipaddress-and-names-ddns-scripts-no-ip.png)
    ![download](./bittorrent-transmissionweb.png)
 
-   transmission-web与transmission-web-control冲突
+   transmission-web 与 transmission-web-control 冲突
 
 ### OpenWRT 在本地 Linux 下编译
 
@@ -129,10 +130,10 @@ sudo apt-get -y install build-essential asciidoc binutils bzip2 gawk gettext git
 ```
 
 2. 下载源代码
-git clone https://github.com/coolsnowwolf/lede.git lean
+   git clone https://github.com/coolsnowwolf/lede.git lean
 
 3. 添加富强模块
-编辑 feeds.conf.default
+   编辑 feeds.conf.default
 
 ```
 #src-git helloworld https://github.com/fw876/helloworld
@@ -141,6 +142,7 @@ src-git small https://github.com/kenzok8/small.git
 ```
 
 4. 更新添加的模块
+
 ```
 ./scripts/feeds update -a
 ./scripts/feeds install -a
@@ -149,6 +151,7 @@ make menuconfig           #配置编译
 ```
 
 5. 编译
+
 ```
 make -j8 download V=s     #预下载
 find dl -size -1024c -exec ls -l {} \;  #检查文件完整性
@@ -210,9 +213,26 @@ vi /etc/config/network
 
 ### 配置 OpenWRT
 
-#### 主路由的设置
+#### 作为主路由的设置
 
-#### 旁路有的设置
+#### 作为旁路由的设置
+
+0. 主路由设置
+
+   1. 基本信息
+      ![ax3600-brief](./ax3600-brief.png)
+   2. 连接设备
+      ![ax3600-mesh](./ax3600-mesh.png)
+   3. 宽带拨号和工作模式
+      ![ax3600-dialup](./ax3600-dialup.png)
+   4. 局域网设置和 DHCP 服务
+      ![ax3600-dhcp](./ax3600-dhcp.png)
+   5. DDNS 设置
+      ![ax3600-ddns-1](./ax3600-ddns-1.png)
+      ![ax3600-ddns-2](./ax3600-ddns-2.png)
+
+   6. 端口映射
+      ![ax3600-port](./ax3600-port.png)
 
 1. 单臂路由，配置 LAN 口
    1. 不要删除 wan/wan6 接口
@@ -224,11 +244,12 @@ vi /etc/config/network
 ```
 
 ![接口设置](./general-setting.png)
-   4. 关闭桥接，需要重新选择接口
-![关闭桥接](./close-bridge.png)
-   **以上操作不要按’保存及应用‘，只要保存**
 
-   5. 配置防火墙, 添加“自定义规则”
+4.  关闭桥接，需要重新选择接口
+    ![关闭桥接](./close-bridge.png)
+    **以上操作不要按’保存及应用‘，只要保存**
+
+5.  配置防火墙, 添加“自定义规则”
 
 ```
 # This file is interpreted as shell script.
@@ -244,12 +265,14 @@ iptables -t nat -I POSTROUTING -j MASQUERADE
 ```
 
 重启防火墙，并’保存及应用‘
-   6. 设置 DHCP 服务器，单臂路由强制使用此网络上的 DHCP，关闭主路由 DHCP
-   AX3600作为主路由，新的固件版本可以设置DHCP的DNS和Gateway，主路由可以作为DHCP服务器，网关和DNS设置为旁路由，旁路有的网关指向主路由
+
+6.  设置 DHCP 服务器，单臂路由强制使用此网络上的 DHCP，关闭主路由 DHCP
+    AX3600 作为主路由，新的固件版本可以设置 DHCP 的 DNS 和 Gateway，主路由可以作为 DHCP 服务器，网关和 DNS 设置为旁路由，旁路有的网关指向主路由
 
 #### 开启 Turbo ACC 网络加速
+
 1. 开启 DNS 加速(可选)
-会改变 DHCP/DNS 设置中的“DNS 转发”
+   会改变 DHCP/DNS 设置中的“DNS 转发”
 
 2. 检查 DHCP/DNS 设置
 
@@ -261,30 +284,28 @@ iptables -t nat -I POSTROUTING -j MASQUERADE
 #### 设置 Passwall
 
 1. 设置 DNS
-有 ChinaDNS-NG，可以开启 ChinaDNS-NG，但是这样就不需要 Turbo ACC 网络加速中的 DNS 加速了
-配置 ChinaDNS-NG 的解析本地和白名单的(UDP) 116.228.111.118
+   有 ChinaDNS-NG，可以开启 ChinaDNS-NG，但是这样就不需要 Turbo ACC 网络加速中的 DNS 加速了
+   配置 ChinaDNS-NG 的解析本地和白名单的(UDP) 116.228.111.118
 
 2. 配置 pdnsd
 
 3. 将 NAS 的 IP 地址添加到 Passwall 的发访控制中
-![NAS访问控制](./access-control.png)
+   ![NAS访问控制](./access-control.png)
 
 #### NAS 的设置
 
 1. 端口转发，将 NAS 的 SSH, WEB 端口(5000)和 SMB 端口(137/138/139/445)，转发到 NAS 服务器
-![ax3600-port](./ax3600-port-forward.png)
-![nas-port](./nas-port-forward.png)
+   ![ax3600-port](./ax3600-port-forward.png)
+   ![nas-port](./nas-port-forward.png)
 
 2. 设置 NAS 的 DNS
-![NAS DNS](./nas-dns.png)
+   ![NAS DNS](./nas-dns.png)
 
 3. 设置 NAS 的网卡
-![NAS Interface](./nas-interface.png)
+   ![NAS Interface](./nas-interface.png)
 
 4. 添加主路由到 NAS Allow List
-![allow-list](./nas-allow-list.png)
-
-
+   ![allow-list](./nas-allow-list.png)
 
 #### 排除 DNS 问题
 
@@ -320,29 +341,31 @@ dig www.google.com +trace
 5. 使用 nslookup
 
 ## 安装 VPS
-### 在namecheap上申请域名
 
-### 注册cloudflare账号，并将namecheap的域名托管给cloudflare
+### 在 namecheap 上申请域名
 
-### 创建VPS
-0. 创建VPS，cloudflare上二级指向该VPS的IP地址
+### 注册 cloudflare 账号，并将 namecheap 的域名托管给 cloudflare
+
+### 创建 VPS
+
+0. 创建 VPS，cloudflare 上二级指向该 VPS 的 IP 地址
 
 1. 安装 7 合 1 脚本
-[快速部署 Xray V2ray SS Trojan Trojan-go 七合一共存一键脚本+伪装博客](https://wxf2088.xyz/2321.html)
-要填写域名，申请证书
+   [快速部署 Xray V2ray SS Trojan Trojan-go 七合一共存一键脚本+伪装博客](https://wxf2088.xyz/2321.html)
+   要填写域名，申请证书
 
-2. BBR 加速脚本集合。包含 BBR Plus/BBR 原版/BBR 魔改版，开启自带 BBR 加速，BBR 四合一脚本等。
-[BBR 加速脚本集合](https://www.v2rayssr.com/bbr.html)
+1. BBR 加速脚本集合。包含 BBR Plus/BBR 原版/BBR 魔改版，开启自带 BBR 加速，BBR 四合一脚本等。
+   [BBR 加速脚本集合](https://www.v2rayssr.com/bbr.html)
 
-3. 高级模式
-   1. 选择IP
-   2. 在cloudflare上配置worker
+1. 高级模式
+   1. 选择 IP
+   2. 在 cloudflare 上配置 worker
 
 ### 客户端安装和配置
+
 1. windows 环境下安装 Winxray，关闭 Mcafee 报警
-2. Macos下安装Clash for Windows
-3. iOS下用美国账号安装Shadowrocket
-4. Android下的客户端
+2. Macos 下安装 Clash for Windows
+3. iOS 下用美国账号安装 Shadowrocket
+4. Android 下的客户端
 
-### DDNS的申请和配置, 花生壳和Windows远程服务
-
+### DDNS 的申请和配置, 花生壳和 Windows 远程服务
