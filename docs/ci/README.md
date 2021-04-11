@@ -2,6 +2,8 @@
 
 ## Jenkins
 
+![jenkins](./jenkins.png)
+
 ### 在 MacOS 上安装 Jenkins
 
 #### 通过 Homebrew
