@@ -170,4 +170,53 @@ jobs:
 
 ## Heroku
 
+### Deploy onto Heroku
+
+1. create 2 apps on Hero, one is for staging, the other is for production
+2. add 2 buildpacks below for each app:
+
+```
+heroku buildpacks:add heroku/nodejs
+heroku buildpacks:add https://github.com/heroku/heroku-buildpack-static
+```
+
+3. add 2 corresponding remotes to your local repository
+
+```
+heroku git:remote -a vue2-gear-staging
+git remote rename heroku heroku-staging
+heroku git:remote -a vue2-gear-production
+```
+
+4. set VUE_APP_BASE_URL to the corresponding backends
+
+for the staging app
+
+```
+heroku config:set VUE_APP_BASE_URL="https://node-gear-staging.herokuapp.com/"
+```
+
+for the production app
+
+```
+heroku config:set VUE_APP_BASE_URL="https://node-gear-production.herokuapp.com/"
+```
+
+5. push code to different stages
+   ** does not use the .env.staging, always use the build script **
+
+for staging
+
+```
+git push heroku-staging master
+```
+
+for production
+
+```
+git push heroku master
+```
+
+6. don't use pipeline to promote from staging to production
+
 ## Amplify@AWS
