@@ -114,6 +114,58 @@ npm run build
 
 ** 如果 Jenkins 在 Docker 中如何访问局域网的目标机器？ **
 
+## Github Action
+
+1. 在目标机器上上传 ssh 公钥
+
+```
+ssh-copy-id -i ~/.ssh/id_rsa youruser@yourhost
+```
+
+2. 在 github 的仓库里创建环境变量
+   DEPLOY_KEY: Our SSH private key
+   DEPLOY_HOST: The host we’re going to connect to
+   DEPLOY_USER: Our user on the remote host
+   DEPLOY_PORT: The port we’re using. (Not necessarily required, port 22 will be used by default)
+   DEPLOY_TARGET: The target folder on the remote host we’re copying our assets to
+
+3. 添加 Workflow
+
+```
+.github/workflows/deploy.yaml
+```
+
+```
+name: SSH Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.18.3'
+      - name: install npm dependencies
+        run: npm install
+      - name: build task
+        run: npm run build
+      - name: ssh deploy
+        uses: easingthemes/ssh-deploy@v2.1.5
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_KEY }}
+          REMOTE_HOST: ${{ secrets.DEPLOY_HOST }}
+          REMOTE_USER: ${{ secrets.DEPLOY_USER }}
+          REMOTE_PORT: ${{ secrets.DEPLOY_PORT }}
+          SOURCE: "dist/"
+          TARGET: ${{ secrets.DEPLOY_TARGET }}
+```
+
 ## Aliyun
 
 ## Heroku
