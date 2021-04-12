@@ -1,7 +1,7 @@
 # 前端 CI/CD 流程
 
 ## XMind
-![CI-CD](./CI-CD.png)
+![ci-cd](./ci-cd.png)
 
 
 ## Jenkins
