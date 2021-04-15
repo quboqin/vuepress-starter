@@ -37,3 +37,18 @@ module.exports = {
   trailingComma: 'all',
 }
 ```
+
+# Node.js + Koa2 + Typescript Boilerplate
+## 
+1. create a folder
+```
+mkdir node-koa2-typescript && cd node-koa2-typescript
+```
+2. init a npm project
+```
+npm init -y
+```
+3. add git repo
+```
+git init
+```
