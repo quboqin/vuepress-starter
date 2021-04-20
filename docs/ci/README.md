@@ -52,6 +52,18 @@ brew services restart jenkins-lts
 
 6. 创建一个管理员账号
 
+** 解决jenkins 2.2版本无法关闭跨站请求伪造保护 **
+修改jenkins的配置文件。vim /etc/sysconfig/jenkins
+```
+JENKINS_JAVA_OPTIONS="-Djava.awt.headless=true -Dhudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION=true"
+JENKINS_JAVA_OPTIONS="-Djava.awt.headless=true -Dhudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION=true"
+```
+重启 jenkins
+
+** node.js 构造 前端工程对机器资源要求较高，在阿里云上最低的配置双核8G内存 **
+
+** 有时候 jenkins 拉去 github 的代码的时侯，会返回 128 错误，估计是超时 **
+
 7. 安装 Node.js 插件,并配置 Node.js
 
 8. 安装一个目标机器，选用 Centos，有 root 账号
