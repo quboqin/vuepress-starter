@@ -126,6 +126,21 @@ npm run build
     ![jenkins-webhooks](./jenkins-webhooks.png)
     ** Jenkin 要外网可见 **
 
+15. 如果使用 node express 作为静态服务器
+用PM2来启动这个node应用
+在root目录下放一下脚本 app-start.sh
+```
+#!/usr/bin/env bash
+cd node-server
+pm2 kill
+pm2 start express-server.js
+```
+在 jenkins的配置中Post-build Actions中执行这个脚本
+```
+#!/usr/bin/env bash
+./app-start.sh
+```
+
 ## Docker
 
 ** 如果 Jenkins 在 Docker 中如何访问局域网的目标机器？ **
