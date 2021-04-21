@@ -181,20 +181,32 @@ jobs:
       - name: install Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: '12.18.3'
+          node-version: '14.16.1'
       - name: install npm dependencies
         run: npm install
       - name: build task
         run: npm run build
-      - name: ssh deploy
-        uses: easingthemes/ssh-deploy@v2.1.5
+      - name: copy file via scp
+        uses: appleboy/scp-action@master
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_KEY }}
-          REMOTE_HOST: ${{ secrets.DEPLOY_HOST }}
-          REMOTE_USER: ${{ secrets.DEPLOY_USER }}
-          REMOTE_PORT: ${{ secrets.DEPLOY_PORT }}
-          SOURCE: "dist/"
-          TARGET: ${{ secrets.DEPLOY_TARGET }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USERNAME: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          KEY: ${{ secrets.DEPLOY_KEY }}
+        with:
+          source: "dist/"
+          target: ${{ secrets.DEPLOY_TARGET }}
+      - name: executing remote command
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          USERNAME: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          KEY: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            cd node-server
+            pm2 kill
+            pm2 start express-server.js
 ```
 
 ## Aliyun
