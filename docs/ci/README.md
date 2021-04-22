@@ -170,6 +170,8 @@ pm2 start express-server.js
 
   3. 在 DNS 服务商这里配置三个二级域名都指向这台 VPS。** 阿里云域名要备案，太麻烦。我现在 oray 上申请一个动态主域名，再通过 cloudflare 上添加三条 CNAME 指向我自己的 VPS
 
+  4. 因为我 jenkins 和静态资源服务器是同一台机器，在配置 jenkins ‘publish over ssh’ 时，我创建了一个 localhost 的 ssh 链接
+
  17. 通过 node express 创建静态服务器
   1. 全局安装 PM2，在 home 目录下创建一个基于 PM2 的启动脚本 app-start.sh
   ```
