@@ -141,6 +141,44 @@ pm2 start express-server.js
 ./app-start.sh
 ```
 
+16. 使用 nginx 支持多个静态资源服务器
+  1. 编辑 /etc/nginx/nginx.conf, 在同一个端口 80 添加三个 server
+  ```
+    server {
+        listen  80;
+        server_name     test.magicefire.com;
+        root            /usr/share/nginx/html/test;
+        location / {}
+    }
+
+    server {
+        listen  80;
+        server_name     staging.magicefire.com;
+        root            /usr/share/nginx/html/staging;
+        location / {}
+    }
+
+    server {
+        listen  80;
+        server_name     production.magicefire.com;
+        root            /usr/share/nginx/html/production;
+        location / {}
+    }
+  ```
+
+  2. 在 /usr/share/nginx/html/ 下创建三个目录
+
+  3. 在 DNS 服务商这里配置三个二级域名都指向这台 VPS。** 阿里云域名要备案，太麻烦。我现在 oray 上申请一个动态主域名，再通过 cloudflare 上添加三条 CNAME 指向我自己的 VPS
+
+ 17. 通过 node express 创建静态服务器
+  1. 全局安装 PM2，在 home 目录下创建一个基于 PM2 的启动脚本 app-start.sh
+  ```
+  #!/usr/bin/env bash
+  cd node-server
+  pm2 kill
+  pm2 start express-server.js
+  ```
+
 ## Docker
 
 ** 如果 Jenkins 在 Docker 中如何访问局域网的目标机器？ **
