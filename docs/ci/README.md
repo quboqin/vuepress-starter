@@ -303,3 +303,36 @@ git push heroku master
 6. don't use pipeline to promote from staging to production
 
 ## Amplify@AWS
+
+## 搭建 web 静态和 API 服务器
+
+### 注册一个VPS
+
+### 安装 node 相关服务
+1. [安装 NVM](https://www.liquidweb.com/kb/install-nvm-node-version-manager-node-js-centos-8/)
+``` shell
+sudo yum update
+or
+sudo dnf update
+```
+```
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+source ~/.bash_profile
+nvm install v14.16.1
+```
+
+2. 安装 PM2 和 Typescript 
+```
+npm i pm2 -g
+npm i typescript -g
+```
+
+
+### 配置 nginx
+1. [安装 nginx](https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-centos-8)
+```
+sudo dnf install nginx
+sudo systemctl enable nginx
+sudo systemctl start nginx
+```
+### 
