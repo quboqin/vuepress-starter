@@ -1,8 +1,8 @@
 # 前端 CI/CD 流程
 
 ## XMind
-![ci-cd](./ci-cd.png)
 
+![ci-cd](./ci-cd.png)
 
 ## Jenkins
 
@@ -52,15 +52,17 @@ brew services restart jenkins-lts
 
 6. 创建一个管理员账号
 
-** 解决jenkins 2.2版本无法关闭跨站请求伪造保护 **
-修改jenkins的配置文件。vim /etc/sysconfig/jenkins
+** 解决 jenkins 2.2 版本无法关闭跨站请求伪造保护 **
+修改 jenkins 的配置文件。vim /etc/sysconfig/jenkins
+
 ```
 JENKINS_JAVA_OPTIONS="-Djava.awt.headless=true -Dhudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION=true"
 JENKINS_JAVA_OPTIONS="-Djava.awt.headless=true -Dhudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION=true"
 ```
+
 重启 jenkins
 
-** node.js 构造 前端工程对机器资源要求较高，在阿里云上最低的配置双核8G内存 **
+** node.js 构造 前端工程对机器资源要求较高，在阿里云上最低的配置双核 8G 内存 **
 
 ** 有时候 jenkins 拉去 github 的代码的时侯，会返回 128 错误，估计是超时 **
 
@@ -127,59 +129,64 @@ npm run build
     ** Jenkin 要外网可见 **
 
 15. 如果使用 node express 作为静态服务器
-用PM2来启动这个node应用
-在root目录下放一下脚本 app-start.sh
+    用 PM2 来启动这个 node 应用
+    在 root 目录下放一下脚本 app-start.sh
+
 ```
 #!/usr/bin/env bash
 cd node-server
 pm2 kill
 pm2 start express-server.js
 ```
-在 jenkins的配置中Post-build Actions中执行这个脚本
+
+在 jenkins 的配置中 Post-build Actions 中执行这个脚本
+
 ```
 #!/usr/bin/env bash
 ./app-start.sh
 ```
 
 16. 使用 nginx 支持多个静态资源服务器
-  1. 编辑 /etc/nginx/nginx.conf, 在同一个端口 80 添加三个 server
-  ```
-    server {
-        listen  80;
-        server_name     test.magicefire.com;
-        root            /usr/share/nginx/html/test;
-        location / {}
-    }
+1. 编辑 /etc/nginx/nginx.conf, 在同一个端口 80 添加三个 server
 
-    server {
-        listen  80;
-        server_name     staging.magicefire.com;
-        root            /usr/share/nginx/html/staging;
-        location / {}
-    }
+```
+  server {
+      listen  80;
+      server_name     test.magicefire.com;
+      root            /usr/share/nginx/html/test;
+      location / {}
+  }
 
-    server {
-        listen  80;
-        server_name     production.magicefire.com;
-        root            /usr/share/nginx/html/production;
-        location / {}
-    }
-  ```
+  server {
+      listen  80;
+      server_name     staging.magicefire.com;
+      root            /usr/share/nginx/html/staging;
+      location / {}
+  }
 
-  2. 在 /usr/share/nginx/html/ 下创建三个目录
+  server {
+      listen  80;
+      server_name     production.magicefire.com;
+      root            /usr/share/nginx/html/production;
+      location / {}
+  }
+```
 
-  3. 在 DNS 服务商这里配置三个二级域名都指向这台 VPS。** 阿里云域名要备案，太麻烦。我现在 oray 上申请一个动态主域名，再通过 cloudflare 上添加三条 CNAME 指向我自己的 VPS
+2. 在 /usr/share/nginx/html/ 下创建三个目录
 
-  4. 因为我 jenkins 和静态资源服务器是同一台机器，在配置 jenkins ‘publish over ssh’ 时，我创建了一个 localhost 的 ssh 链接
+3. 在 DNS 服务商这里配置三个二级域名都指向这台 VPS。\*\* 阿里云域名要备案，太麻烦。我现在 oray 上申请一个动态主域名，再通过 cloudflare 上添加三条 CNAME 指向我自己的 VPS
 
- 17. 通过 node express 创建静态服务器
-  1. 全局安装 PM2，在 home 目录下创建一个基于 PM2 的启动脚本 app-start.sh
-  ```
-  #!/usr/bin/env bash
-  cd node-server
-  pm2 kill
-  pm2 start express-server.js
-  ```
+4. 因为我 jenkins 和静态资源服务器是同一台机器，在配置 jenkins ‘publish over ssh’ 时，我创建了一个 localhost 的 ssh 链接
+
+5. 通过 node express 创建静态服务器
+6. 全局安装 PM2，在 home 目录下创建一个基于 PM2 的启动脚本 app-start.sh
+
+```
+#!/usr/bin/env bash
+cd node-server
+pm2 kill
+pm2 start express-server.js
+```
 
 ## Docker
 
@@ -306,33 +313,140 @@ git push heroku master
 
 ## 搭建 web 静态和 API 服务器
 
-### 注册一个VPS
+### 注册一个 VPS
 
 ### 安装 node 相关服务
+
 1. [安装 NVM](https://www.liquidweb.com/kb/install-nvm-node-version-manager-node-js-centos-8/)
-``` shell
+
+```shell
 sudo yum update
 or
 sudo dnf update
 ```
+
 ```
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
 source ~/.bash_profile
 nvm install v14.16.1
 ```
 
-2. 安装 PM2 和 Typescript 
+2. 安装 PM2 和 Typescript
+
 ```
 npm i pm2 -g
 npm i typescript -g
 ```
 
-
 ### 配置 nginx
+
 1. [安装 nginx](https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-centos-8)
+
 ```
 sudo dnf install nginx
 sudo systemctl enable nginx
 sudo systemctl start nginx
 ```
-### 
+
+###
+
+## 用 Gihub Actions 在 Oracle 云上搭建 Node.js 全栈 DevOps 流程
+
+### 在 Oracle Cloud 申请一台免费的 VPS
+
+Oracle Cloud 可以最多申请两台免费的低配置的 VPS，并赠送一个月 400 新加坡元的 Credit
+
+1. 系统镜像最好选择 Centos，因为默认是 root 用户，但是在 Oracle 或其他云服务商提供的 VPS 上，其实是 opc 用户。要修改设置，开启 root 账号登陆，顺便开启密码方式登入
+
+```shell
+sudo -i
+vi ~/.ssh/authorized_keys
+```
+
+删除 ssh-rsa 前的所有内容
+![delete-firewall-content-in-authorized_keys](./delete-firewall-content-in-authorized_keys.png)
+
+```shell
+vi /etc/ssh/sshd_config
+```
+
+```shell
+PermitRootLogin yes
+PasswordAuthentication yes
+```
+
+```shell
+systemctl restart sshd
+```
+
+添加密码
+
+```shell
+passwd
+```
+
+2. 在子网的防火墙上 Ingress 的端口，我这里开启 80-82/8080/443/3001-3002/22
+
+3. 关闭 Centos 内部的防火墙
+
+```shell
+sudo systemctl stop firewalld
+sudo systemctl disable firewalld
+```
+
+### 在 VPS 上安装必要的软件
+
+#### 安装 Nginx
+
+1. Install the nginx package with:
+
+```shell
+dnf install nginx
+```
+
+2. After the installation is finished, run the following commands to enable and start the server:
+
+```shell
+systemctl enable nginx
+systemctl start nginx
+```
+
+#### 安装 nvm 和 node.js
+
+1. First, we will need to make sure all of our packages are up to date:
+
+```shell
+dnf update
+```
+
+2. Next, we will need to run the following NVM installation script. This will install the latest version of NVM from GitHub.
+
+```shell
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+source ~/.bash_profile
+nvm list-remote
+nvm install 14
+```
+
+#### 在全局安装 typescript，因为以 production 编译 api server 的时侯，npm i 只安装 dev 的依赖
+
+```shell
+npm i typescript -g
+```
+
+#### 在全局安装 pm2 用于 api server 的进程管理
+
+```shell
+npm i pm2 -g
+
+```
+
+### 构建 node server
+
+1. 创建目录
+
+```shell
+mkdir -p node-server/test
+mkdir -p node-server/staging
+mkdir -p node-server/production
+```
