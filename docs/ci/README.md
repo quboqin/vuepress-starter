@@ -515,3 +515,56 @@ how to fix it, please visit the web page mentioned above
 
 6. 在浏览器链接该https服务，也报错误，下载证书，双击导入密钥管理器，手动让证书受信
 ![always-trust](./always-trust.png)
+
+###  Let's Encrypt on CentOS 8 for backend
+1. To add the CentOS 8 EPEL repository, run the following command:
+```shell
+dnf install epel-release
+```
+
+2. install all of the required packages
+```shell
+dnf install certbot python3-certbot-nginx
+```
+
+3. 正式获取
+```shell
+certbot certonly -w /usr/share/nginx/html -d api.magicefire.com
+```
+![certbot-api-1](./certbot-api-1.png)
+![certbot-api-2](./certbot-api-2.png)
+
+### Let's Encrypt on CentOS 8 for frontend    
+1. 编辑 /etc/nginx/nginx.conf支持同一个端口，不同的静态服务器
+```
+server {
+    listen  80;
+    server_name     test.magicefire.com;
+    root            /usr/share/nginx/html/test;
+    location / {}
+}
+
+server {
+    listen  80;
+    server_name     staging.magicefire.com;
+    root            /usr/share/nginx/html/staging;
+    location / {}
+}
+
+server {
+    listen  80;
+    server_name     production.magicefire.com;
+    root            /usr/share/nginx/html/production;
+    location / {}
+}
+```
+建立对应的目录，在目录下放测试html
+
+2. 修改Cloudflare，添加三条A记录，支持VPS的IP
+![cloudflare-static](./cloudflare-static.png)
+
+3. 通过Let's Encrypt修改nginx的https支持
+```shell
+certbot -nginx
+```
+![certbot-static](./certbot-static.png)
