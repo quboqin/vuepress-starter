@@ -452,8 +452,10 @@ mkdir -p node-server/production
 ```
 
 ### running HTTPS localhost on macOS
-1. 在 node-koa2-typescript项目的root目录下创建local-ssl子目录
-2. 在 local-ssl子目录下，新建一个配置文件req.cnf
+
+1. 在 node-koa2-typescript 项目的 root 目录下创建 local-ssl 子目录
+2. 在 local-ssl 子目录下，新建一个配置文件 req.cnf
+
 ```
 [req]
 distinguished_name = req_distinguished_name
@@ -464,7 +466,7 @@ C = US
 ST = California
 L = Folsom
 O = MyCompany
-OU = Dev Department 
+OU = Dev Department
 CN = www.localhost.com
 [v3_req]
 keyUsage = critical, digitalSignature, keyAgreement
@@ -475,34 +477,36 @@ DNS.1 = www.localhost.com
 DNS.2 = localhost.com
 DNS.3 = localhost
 ```
+
 3. 创建本地证书和私钥
+
 ```shell
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout cert.key -out cert.pem -config req.cnf -sha256
 ```
 
-4. 修改server端代码支持本地https
+4. 修改 server 端代码支持本地 https
+
 ```typescript
-  let httpsOptions
-  if (config.isDevelopment) {
-    httpsOptions = {
-      key: fs.readFileSync('./local-ssl/cert.key'),
-      cert: fs.readFileSync('./local-ssl/cert.pem'),
-    }
-  } else {
-    httpsOptions = {
-      key: fs.readFileSync(
-        `/etc/letsencrypt/live/api.magicefire.com/privkey.pem`,
-      ),
-      cert: fs.readFileSync(
-        `/etc/letsencrypt/live/api.magicefire.com/cert.pem`,
-      ),
-      ca: fs.readFileSync(`/etc/letsencrypt/live/api.magicefire.com/chain.pem`),
-    }
-  }
-  return https.createServer(httpsOptions, app.callback()).listen(HTTP_PORT)
+let httpsOptions;
+if (config.isDevelopment) {
+  httpsOptions = {
+    key: fs.readFileSync("./local-ssl/cert.key"),
+    cert: fs.readFileSync("./local-ssl/cert.pem"),
+  };
+} else {
+  httpsOptions = {
+    key: fs.readFileSync(
+      `/etc/letsencrypt/live/api.magicefire.com/privkey.pem`
+    ),
+    cert: fs.readFileSync(`/etc/letsencrypt/live/api.magicefire.com/cert.pem`),
+    ca: fs.readFileSync(`/etc/letsencrypt/live/api.magicefire.com/chain.pem`),
+  };
+}
+return https.createServer(httpsOptions, app.callback()).listen(HTTP_PORT);
 ```
 
-5. 启动https服务后，仍然报错
+5. 启动 https 服务后，仍然报错
+
 ```shell
 curl https://localhost:3000/api/v1/users
 curl: (60) SSL certificate problem: unable to get local issuer certificate
@@ -513,29 +517,36 @@ establish a secure connection to it. To learn more about this situation and
 how to fix it, please visit the web page mentioned above
 ```
 
-6. 在浏览器链接该https服务，也报错误，下载证书，双击导入密钥管理器，手动让证书受信
-![always-trust](./always-trust.png)
+6. 在浏览器链接该 https 服务，也报错误，下载证书，双击导入密钥管理器，手动让证书受信
+   ![always-trust](./always-trust.png)
 
-###  Let's Encrypt on CentOS 8 for backend
+### Let's Encrypt on CentOS 8 for backend
+
 1. To add the CentOS 8 EPEL repository, run the following command:
+
 ```shell
 dnf install epel-release
 ```
 
 2. install all of the required packages
+
 ```shell
 dnf install certbot python3-certbot-nginx
 ```
 
 3. 正式获取
+
 ```shell
 certbot certonly -w /usr/share/nginx/html -d api.magicefire.com
 ```
+
 ![certbot-api-1](./certbot-api-1.png)
 ![certbot-api-2](./certbot-api-2.png)
 
-### Let's Encrypt on CentOS 8 for frontend    
-1. 编辑 /etc/nginx/nginx.conf支持同一个端口，不同的静态服务器
+### Let's Encrypt on CentOS 8 for frontend
+
+1. 编辑 /etc/nginx/nginx.conf 支持同一个端口，不同的静态服务器
+
 ```
 server {
     listen  80;
@@ -558,26 +569,32 @@ server {
     location / {}
 }
 ```
-建立对应的目录，在目录下放测试html
 
-2. 修改Cloudflare，添加三条A记录，支持VPS的IP
-![cloudflare-static](./cloudflare-static.png)
+建立对应的目录，在目录下放测试 html
 
-3. 通过Let's Encrypt修改nginx的https支持
+2. 修改 Cloudflare，添加三条 A 记录，支持 VPS 的 IP
+   ![cloudflare-static](./cloudflare-static.png)
+
+3. 通过 Let's Encrypt 修改 nginx 的 https 支持
+
 ```shell
 certbot -nginx
 ```
+
 ![certbot-static](./certbot-static.png)
 
 # Heroku
-## 在Heroku上构建node api server
-1. 创建一条pipeline
-2. 创建两个app
-3. app的设置分别里添加
-HEROKU = 1
-NODE_ENV = staging | production
-4. 因为node server端是运行时读取环境变量，所以可以直接promote staging to production. 而github actions是因为直接在target上编辑，不是将dist复制到target，所以这个问题还没有解决。
 
+## 在 Heroku 上构建 node api server
 
-## 在Heroku上构建 vue 前端
-1. 因为是编译的时候读取环境变量，所以不能promote，所以建立pipeline没有意义，直接创建两个app
+1. 创建一条 pipeline
+2. 创建两个 app
+3. app 的设置分别里添加
+   HEROKU = 1
+   NODE_ENV = staging | production
+4. 因为 node server 端是运行时读取环境变量，所以可以直接 promote staging to production. 而 github actions 是因为直接在 target 上编辑，不是将 dist 复制到 target，所以这个问题还没有解决。
+5. ** Heroku 的 API 网关自己已支持 https，后端起的 node server 在内网里是 http， 所以要修改代码 换成 http server，否者会报 503 错误**
+
+## 在 Heroku 上构建 vue 前端
+
+1. 因为是编译的时候读取环境变量，所以不能 promote，所以建立 pipeline 没有意义，直接创建两个 app
