@@ -568,3 +568,16 @@ server {
 certbot -nginx
 ```
 ![certbot-static](./certbot-static.png)
+
+# Heroku
+## 在Heroku上构建node api server
+1. 创建一条pipeline
+2. 创建两个app
+3. app的设置分别里添加
+HEROKU = 1
+NODE_ENV = staging | production
+4. 因为node server端是运行时读取环境变量，所以可以直接promote staging to production. 而github actions是因为直接在target上编辑，不是将dist复制到target，所以这个问题还没有解决。
+
+
+## 在Heroku上构建 vue 前端
+1. 因为是编译的时候读取环境变量，所以不能promote，所以建立pipeline没有意义，直接创建两个app
