@@ -450,3 +450,68 @@ mkdir -p node-server/test
 mkdir -p node-server/staging
 mkdir -p node-server/production
 ```
+
+### running HTTPS localhost on macOS
+1. 在 node-koa2-typescript项目的root目录下创建local-ssl子目录
+2. 在 local-ssl子目录下，新建一个配置文件req.cnf
+```
+[req]
+distinguished_name = req_distinguished_name
+x509_extensions = v3_req
+prompt = no
+[req_distinguished_name]
+C = US
+ST = California
+L = Folsom
+O = MyCompany
+OU = Dev Department 
+CN = www.localhost.com
+[v3_req]
+keyUsage = critical, digitalSignature, keyAgreement
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = www.localhost.com
+DNS.2 = localhost.com
+DNS.3 = localhost
+```
+3. 创建本地证书和私钥
+```shell
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout cert.key -out cert.pem -config req.cnf -sha256
+```
+
+4. 修改server端代码支持本地https
+```typescript
+  let httpsOptions
+  if (config.isDevelopment) {
+    httpsOptions = {
+      key: fs.readFileSync('./local-ssl/cert.key'),
+      cert: fs.readFileSync('./local-ssl/cert.pem'),
+    }
+  } else {
+    httpsOptions = {
+      key: fs.readFileSync(
+        `/etc/letsencrypt/live/api.magicefire.com/privkey.pem`,
+      ),
+      cert: fs.readFileSync(
+        `/etc/letsencrypt/live/api.magicefire.com/cert.pem`,
+      ),
+      ca: fs.readFileSync(`/etc/letsencrypt/live/api.magicefire.com/chain.pem`),
+    }
+  }
+  return https.createServer(httpsOptions, app.callback()).listen(HTTP_PORT)
+```
+
+5. 启动https服务后，仍然报错
+```shell
+curl https://localhost:3000/api/v1/users
+curl: (60) SSL certificate problem: unable to get local issuer certificate
+More details here: https://curl.haxx.se/docs/sslcerts.html
+
+curl failed to verify the legitimacy of the server and therefore could not
+establish a secure connection to it. To learn more about this situation and
+how to fix it, please visit the web page mentioned above
+```
+
+6. 在浏览器链接该https服务，也报错误，下载证书，双击导入密钥管理器，手动让证书受信
+![always-trust](./always-trust.png)
