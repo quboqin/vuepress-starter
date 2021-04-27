@@ -617,3 +617,38 @@ heroku buildpacks:add https://github.com/heroku/heroku-buildpack-static
 const url = process.env.VUE_APP_HEROKU_URL ?? process.env.VUE_APP_BASE_URL
 ```
 
+## Using Amplify to build and deploy app
+1. 与 Heroku 的差异是 Amplify 是一个 app 下不同的分支区分， Heroku 是两个不同的 app
+2. 在 amplify 下创建一个app
+![amplify-vue-deploy](./amplify-vue-deploy.png)
+连接github的仓库，选择连接的分支，不同的分支会部署到不同的环境
+3. 在项目的根目录下，创建amplify.yaml文件，设置build的脚本
+```yaml
+version: 0.2
+backend:
+  phases:
+    build:
+      commands:
+        - '# Execute Amplify CLI with the helper script'
+        - amplifyPush --simple
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - nvm use $VERSION_NODE_14
+        - node -v
+        - if [ "${AWS_BRANCH}" = "staging" ]; then echo "staging branch" && npm run build -- --mode staging; elif [ "${AWS_BRANCH}" = "test" ]; then echo "test branch" && npm run build -- --mode mytest; else echo "production branch" && npm run build; fi
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+```
+4. 添加在amplify下特定的环境变量
+![amplify-env](./amplify-env.png)
+** 注意不要添加 NODE_ENV=production，设置了这个后npm ci不会install devDependencies下的模块，会导致 npm run build报错无法找到 vue-cli-service**
