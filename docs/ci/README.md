@@ -652,3 +652,5 @@ frontend:
 4. 添加在amplify下特定的环境变量
 ![amplify-env](./amplify-env.png)
 ** 注意不要添加 NODE_ENV=production，设置了这个后npm ci不会install devDependencies下的模块，会导致 npm run build报错无法找到 vue-cli-service**
+
+5. 添加amplify 应用的时候，还要添加 IAM role的 amplify角色？
