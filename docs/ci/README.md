@@ -594,7 +594,26 @@ certbot -nginx
    NODE_ENV = staging | production
 4. 因为 node server 端是运行时读取环境变量，所以可以直接 promote staging to production. 而 github actions 是因为直接在 target 上编辑，不是将 dist 复制到 target，所以这个问题还没有解决。
 5. ** Heroku 的 API 网关自己已支持 https，后端起的 node server 在内网里是 http， 所以要修改代码 换成 http server，否者会报 503 错误**
+6. 为每个app添加 heroku/nodejs 编译插件
 
 ## 在 Heroku 上构建 vue 前端
 
 1. 因为是编译的时候读取环境变量，所以不能 promote，所以建立 pipeline 没有意义，直接创建两个 app
+2. 为每个app添加编译插件
+```shell
+heroku buildpacks:add heroku/nodejs
+heroku buildpacks:add https://github.com/heroku/heroku-buildpack-static
+```
+3. 设置编译时变量
+![heroku-vue-static-var](./heroku-vue-static-var.png)
+
+4. 修改 package.json 里的script, 通过NODE_ENV，决定编译条件
+```
+"build": "vue-cli-service build --mode ${NODE_ENV}",
+```
+
+5. 修改 axios 支持 heroku api url
+```
+const url = process.env.VUE_APP_HEROKU_URL ?? process.env.VUE_APP_BASE_URL
+```
+
