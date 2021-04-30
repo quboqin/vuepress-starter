@@ -656,4 +656,167 @@ frontend:
 5. 添加amplify 应用的时候，还要添加 IAM role的 amplify角色？
 
 ## Using Amplify to build and deploy backend app
-1. provision an EC2 instance
+1. 创建一个user，给github action使用，要有 AmazonS3FullAccess and AWSCodeDeployFullAccess polices
+
+2. 设置github secret
+
+3. 通过CLI创建Code Deploy APP
+```shell
+aws deploy create-application \
+--application-name api-server \
+--compute-platform Server
+```
+CodeDeployDemo-Trust.json
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": [
+                    "codedeploy.amazonaws.com"
+                ]
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}
+```
+create a new role
+```shell
+aws iam create-role \
+--role-name CodeDeployServiceRole \
+--assume-role-policy-document file://CodeDeployDemo-Trust.json
+```
+attach the role to CodeDeploy
+```shell
+aws iam attach-role-policy \
+--role-name CodeDeployServiceRole \
+--policy-arn arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole
+```
+get role id
+```shell
+aws iam get-role \
+--role-name CodeDeployServiceRole \
+--query "Role.Arn" \
+--output text
+```
+create two group [staging, production]
+```shell
+aws deploy create-deployment-group \
+--application-name api-server \
+--deployment-group-name staging \
+--service-role-arn arn:aws:iam::[account-number]:role/CodeDeployServiceRole \
+--ec2-tag-filters Key=Name,Value=staging,Type=KEY_AND_VALUE
+```
+4. 添加 action 脚本, 这里完成几步动作
+  - 在指定的分支[staing, production]checkout源代码
+  - 打包上传到S3，通过AWS CLI或Console创建对应的S3 Bucket
+  - 触发Code Deploy对应Config，启动一次Deploy 
+
+```
+name: Deploy to EC2
+
+on: push
+
+jobs:
+  staging-deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/aws-staging'
+    steps:
+    - uses: actions/checkout@v1
+    - name: AWS Deploy push
+      uses: ItsKarma/aws-cli@v1.70.0
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: "ap-northeast-1"
+      with:
+        args: >-
+          deploy push
+          --application-name api-server
+          --description "This is a revision for the api-server"
+          --s3-location s3://node-koa2-typescript-staging/staging-api-server.zip
+          --source .
+    - name: AWS Create Deploy
+      uses: ItsKarma/aws-cli@v1.70.0
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: "ap-northeast-1"
+      with:
+        args: >-
+          deploy create-deployment
+          --application-name api-server
+          --deployment-config-name CodeDeployDefault.OneAtATime
+          --deployment-group-name staging
+          --file-exists-behavior OVERWRITE
+          --s3-location bucket=node-koa2-typescript-staging,key=staging-api-server.zip,bundleType=zip
+
+  production-deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/aws-production'
+    steps:
+    - uses: actions/checkout@v1
+    - name: AWS Deploy push
+      uses: ItsKarma/aws-cli@v1.70.0
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: "ap-northeast-1"
+      with:
+        args: >-
+          deploy push
+          --application-name api-server
+          --description "This is a revision for the api-server"
+          --s3-location s3://node-koa2-typescript-production/production-api-server.zip
+          --source .
+    - name: AWS Create Deploy
+      uses: ItsKarma/aws-cli@v1.70.0
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: "ap-northeast-1"
+      with:
+        args: >-
+          deploy create-deployment
+          --application-name api-server
+          --deployment-config-name CodeDeployDefault.OneAtATime
+          --deployment-group-name production
+          --file-exists-behavior OVERWRITE
+          --s3-location bucket=node-koa2-typescript-production,key=production-api-server.zip,bundleType=zip
+
+```
+5. provision an EC2 instance
+  1. 创建EC2实例，绑定Role，开放对外PORT，设置tag
+  2. 安装 [CodeDeploy agent](https://docs.aws.amazon.com/codedeploy/latest/userguide/codedeploy-agent-operations-install.html)
+
+6. The next stage is to setup our appspec file.
+当部署在EC2上后，会根据 appspec.yml，调用相关脚本，完成最后部署
+ - 安装全局的pm2
+ - 到项目root目录下，安装npm依赖包
+ - 打包编译
+ - 配合ecosystem.config.js启动pm2进程
+```yaml
+version: 0.0
+os: linux
+files:
+  - source: .
+    destination: /home/ec2-user/api-server
+hooks:
+  BeforeInstall:
+    - location: aws-ec2-deploy-scripts/before-install.sh
+      timeout: 300
+      runas: root
+  AfterInstall:
+    - location: aws-ec2-deploy-scripts/after-install.sh
+      timeout: 300
+      runas: root
+  ApplicationStart:
+    - location: aws-ec2-deploy-scripts/application-start.sh
+      timeout: 300
+      runas: root
+```
+
