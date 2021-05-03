@@ -594,42 +594,48 @@ certbot -nginx
    NODE_ENV = staging | production
 4. 因为 node server 端是运行时读取环境变量，所以可以直接 promote staging to production. 而 github actions 是因为直接在 target 上编辑，不是将 dist 复制到 target，所以这个问题还没有解决。
 5. ** Heroku 的 API 网关自己已支持 https，后端起的 node server 在内网里是 http， 所以要修改代码 换成 http server，否者会报 503 错误**
-6. 为每个app添加 heroku/nodejs 编译插件
+6. 为每个 app 添加 heroku/nodejs 编译插件
 
 ## 在 Heroku 上构建 vue 前端
 
 1. 因为是编译的时候读取环境变量，所以不能 promote，所以建立 pipeline 没有意义，直接创建两个 app
-2. 为每个app添加编译插件
+2. 为每个 app 添加编译插件
+
 ```shell
 heroku buildpacks:add heroku/nodejs
 heroku buildpacks:add https://github.com/heroku/heroku-buildpack-static
 ```
-3. 设置编译时变量
-![heroku-vue-static-var](./heroku-vue-static-var.png)
 
-4. 修改 package.json 里的script, 通过NODE_ENV，决定编译条件
+3. 设置编译时变量
+   ![heroku-vue-static-var](./heroku-vue-static-var.png)
+
+4. 修改 package.json 里的 script, 通过 NODE_ENV，决定编译条件
+
 ```
 "build": "vue-cli-service build --mode ${NODE_ENV}",
 ```
 
 5. 修改 axios 支持 heroku api url
+
 ```
 const url = process.env.VUE_APP_HEROKU_URL ?? process.env.VUE_APP_BASE_URL
 ```
 
 ## Using Amplify to build and deploy front app
+
 1. 与 Heroku 的差异是 Amplify 是一个 app 下不同的分支区分， Heroku 是两个不同的 app
-2. 在 amplify 下创建一个app
-![amplify-vue-deploy](./amplify-vue-deploy.png)
-连接github的仓库，选择连接的分支，不同的分支会部署到不同的环境
-3. 在项目的根目录下，创建amplify.yaml文件，设置build的脚本
+2. 在 amplify 下创建一个 app
+   ![amplify-vue-deploy](./amplify-vue-deploy.png)
+   连接 github 的仓库，选择连接的分支，不同的分支会部署到不同的环境
+3. 在项目的根目录下，创建 amplify.yaml 文件，设置 build 的脚本
+
 ```yaml
 version: 0.2
 backend:
   phases:
     build:
       commands:
-        - '# Execute Amplify CLI with the helper script'
+        - "# Execute Amplify CLI with the helper script"
         - amplifyPush --simple
 frontend:
   phases:
@@ -644,179 +650,14 @@ frontend:
   artifacts:
     baseDirectory: dist
     files:
-      - '**/*'
+      - "**/*"
   cache:
     paths:
       - node_modules/**/*
 ```
-4. 添加在amplify下特定的环境变量
-![amplify-env](./amplify-env.png)
-** 注意不要添加 NODE_ENV=production，设置了这个后npm ci不会install devDependencies下的模块，会导致 npm run build报错无法找到 vue-cli-service**
 
-5. 添加amplify 应用的时候，还要添加 IAM role的 amplify角色？
+4. 添加在 amplify 下特定的环境变量
+   ![amplify-env](./amplify-env.png)
+   ** 注意不要添加 NODE_ENV=production，设置了这个后 npm ci 不会 install devDependencies 下的模块，会导致 npm run build 报错无法找到 vue-cli-service**
 
-## Using Amplify to build and deploy backend app
-1. 创建一个user，给github action使用，要有 AmazonS3FullAccess and AWSCodeDeployFullAccess polices
-
-2. 设置github secret
-
-3. 通过CLI创建Code Deploy APP
-```shell
-aws deploy create-application \
---application-name api-server \
---compute-platform Server
-```
-CodeDeployDemo-Trust.json
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "",
-            "Effect": "Allow",
-            "Principal": {
-                "Service": [
-                    "codedeploy.amazonaws.com"
-                ]
-            },
-            "Action": "sts:AssumeRole"
-        }
-    ]
-}
-```
-create a new role
-```shell
-aws iam create-role \
---role-name CodeDeployServiceRole \
---assume-role-policy-document file://CodeDeployDemo-Trust.json
-```
-attach the role to CodeDeploy
-```shell
-aws iam attach-role-policy \
---role-name CodeDeployServiceRole \
---policy-arn arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole
-```
-get role id
-```shell
-aws iam get-role \
---role-name CodeDeployServiceRole \
---query "Role.Arn" \
---output text
-```
-create two group [staging, production]
-```shell
-aws deploy create-deployment-group \
---application-name api-server \
---deployment-group-name staging \
---service-role-arn arn:aws:iam::[account-number]:role/CodeDeployServiceRole \
---ec2-tag-filters Key=Name,Value=staging,Type=KEY_AND_VALUE
-```
-4. 添加 action 脚本, 这里完成几步动作
-  - 在指定的分支[staing, production]checkout源代码
-  - 打包上传到S3，通过AWS CLI或Console创建对应的S3 Bucket
-  - 触发Code Deploy对应Config，启动一次Deploy 
-
-```
-name: Deploy to EC2
-
-on: push
-
-jobs:
-  staging-deploy:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/aws-staging'
-    steps:
-    - uses: actions/checkout@v1
-    - name: AWS Deploy push
-      uses: ItsKarma/aws-cli@v1.70.0
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "ap-northeast-1"
-      with:
-        args: >-
-          deploy push
-          --application-name api-server
-          --description "This is a revision for the api-server"
-          --s3-location s3://node-koa2-typescript-staging/staging-api-server.zip
-          --source .
-    - name: AWS Create Deploy
-      uses: ItsKarma/aws-cli@v1.70.0
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "ap-northeast-1"
-      with:
-        args: >-
-          deploy create-deployment
-          --application-name api-server
-          --deployment-config-name CodeDeployDefault.OneAtATime
-          --deployment-group-name staging
-          --file-exists-behavior OVERWRITE
-          --s3-location bucket=node-koa2-typescript-staging,key=staging-api-server.zip,bundleType=zip
-
-  production-deploy:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/aws-production'
-    steps:
-    - uses: actions/checkout@v1
-    - name: AWS Deploy push
-      uses: ItsKarma/aws-cli@v1.70.0
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "ap-northeast-1"
-      with:
-        args: >-
-          deploy push
-          --application-name api-server
-          --description "This is a revision for the api-server"
-          --s3-location s3://node-koa2-typescript-production/production-api-server.zip
-          --source .
-    - name: AWS Create Deploy
-      uses: ItsKarma/aws-cli@v1.70.0
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "ap-northeast-1"
-      with:
-        args: >-
-          deploy create-deployment
-          --application-name api-server
-          --deployment-config-name CodeDeployDefault.OneAtATime
-          --deployment-group-name production
-          --file-exists-behavior OVERWRITE
-          --s3-location bucket=node-koa2-typescript-production,key=production-api-server.zip,bundleType=zip
-
-```
-5. provision an EC2 instance
-  1. 创建EC2实例，绑定Role，开放对外PORT，设置tag
-  2. 安装 [CodeDeploy agent](https://docs.aws.amazon.com/codedeploy/latest/userguide/codedeploy-agent-operations-install.html)
-
-6. The next stage is to setup our appspec file.
-当部署在EC2上后，会根据 appspec.yml，调用相关脚本，完成最后部署
- - 安装全局的pm2
- - 到项目root目录下，安装npm依赖包
- - 打包编译
- - 配合ecosystem.config.js启动pm2进程
-```yaml
-version: 0.0
-os: linux
-files:
-  - source: .
-    destination: /home/ec2-user/api-server
-hooks:
-  BeforeInstall:
-    - location: aws-ec2-deploy-scripts/before-install.sh
-      timeout: 300
-      runas: root
-  AfterInstall:
-    - location: aws-ec2-deploy-scripts/after-install.sh
-      timeout: 300
-      runas: root
-  ApplicationStart:
-    - location: aws-ec2-deploy-scripts/application-start.sh
-      timeout: 300
-      runas: root
-```
-
+5. 添加 amplify 应用的时候，还要添加 IAM role 的 amplify 角色？
