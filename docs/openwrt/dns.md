@@ -78,6 +78,13 @@ server=/.amd.magicefire.com/114.114.115.115
 ```
 2. 在‘DHCP/DNS->基本设置->DNS转发’不需要配置
 ![dhcp-dns](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesdhcp-dns.png)
+
+3. 关闭 Turbo ACC 网络加速设置的 DNS 缓存
+- DNS 缓存用的也是  pdnsd 模块，在 passwall 已使用，所以没有必要再开启
+- 如果开启了这里的 DNS 缓存，在 DHCP/DNS 的基本设置中 DNS 转发将指向 dnscache, 端口 5333，然后再由 dnscache 指向 pdnsd，而如果 这里 pdnsd 的上游 DNS 设成 114.114.114.114，就不是 1.1.1.1 了
+![turboacc-dns](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesturboacc-dns.png)
+而这时候的 DHCP/DNS 的基本设置的 DNS 转发指向
+![dhcp-dns-转发](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesdhcp-dns-%E8%BD%AC%E5%8F%91.png)
 ## 常用的命令行检查工具
 1. dnsmasq
 ```shell
@@ -145,6 +152,11 @@ www.google.com.		209	IN	A	172.217.163.36
 ;; SERVER: 8.8.8.8#53(8.8.8.8) (UDP)
 ;; WHEN: Sat Feb 12 18:26:26 CST 2022
 ;; MSG SIZE  rcvd: 59
+```
+
+```shell
+$ dig google.com +trace
+$ dig @8.8.8.8 -p 5300 google.com
 ```
 
 ## 参考文档
