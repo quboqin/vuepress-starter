@@ -85,6 +85,7 @@ server=/.amd.magicefire.com/114.114.115.115
 ![turboacc-dns](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesturboacc-dns.png)
 而这时候的 DHCP/DNS 的基本设置的 DNS 转发指向
 ![dhcp-dns-转发](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesdhcp-dns-%E8%BD%AC%E5%8F%91.png)
+- 如果配置了 passwall，就按照第一张图的路径
 ## 常用的命令行检查工具
 1. dnsmasq
 ```shell
