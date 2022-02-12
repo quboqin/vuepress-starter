@@ -146,3 +146,8 @@ www.google.com.		209	IN	A	172.217.163.36
 ;; WHEN: Sat Feb 12 18:26:26 CST 2022
 ;; MSG SIZE  rcvd: 59
 ```
+
+## 参考文档
+1. [Lean OpenWrt DNS解析流程研究](https://renyili.org/post/openwrt_dns_process/)
+2. [openwrt dnsmasq dns 配置，运行机制初探](https://hellodk.cn/post/552)
+3. [全方面讲解OpenWrt的DNS配置与DHCP，并介绍dnsmasq DNS缓存工具、nslookup/dig DNS测试工具](https://dongshao.blog.csdn.net/article/details/102713133?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1.pc_relevant_default&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1.pc_relevant_default&utm_relevant_index=2)
