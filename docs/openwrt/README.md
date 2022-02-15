@@ -186,6 +186,16 @@ rm -f .config             #删除配置文件（可选）
 或者需要 SSH 连接则把 SSH connection to Actions 的值改为 true
 点击 Actions
 
+##### R4S
+quboqin/NanoPi-R4S
+forked from DHDAXCW/NanoPi-R4S
+[NanoPi-R4S-2021 每天自动更新插件和内核版本](git@github.com:quboqin/NanoPi-R4S.git)
+
+##### X86
+quboqin/FusionWRT_x86_x64
+forked from DHDAXCW/FusionWRT_x86_x64
+[x86-x64 每天自动更新插件和内核版本](git@github.com:quboqin/FusionWRT_x86_x64.git)
+
 ##### 创建多个 workflow，同时编译两个平台
 
 ### 刷入固件的方法
