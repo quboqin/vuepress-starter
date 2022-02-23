@@ -196,6 +196,10 @@ quboqin/FusionWRT_x86_x64
 forked from DHDAXCW/FusionWRT_x86_x64
 [x86-x64 每天自动更新插件和内核版本](git@github.com:quboqin/FusionWRT_x86_x64.git)
 
+##### 新路由3
+[OpenWrt-Actions & One-key AutoUpdate](https://github.com/Hyy2001X/AutoBuild-Actions)
+
+
 ##### 创建多个 workflow，同时编译两个平台
 
 ### 刷入固件的方法
