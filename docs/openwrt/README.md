@@ -163,6 +163,18 @@ https://www.vediotalk.com/archives/45932
 
 3. 安装 OpenWrt
 qm importdisk 100 /var/lib/vz/template/iso/openwrt-x86-64-generic-squashfs-combined.img local-lvm
+
+##### 固件下载
+[【2022-5-14】每日更新 高大全/精简版 Openwrt x86 5.15内核 软路由固件 (提供定制)](https://www.right.com.cn/forum/thread-7048868-1-1.html)
+###### 固件基本信息
+- 管理地址: 192.168.1.1
+- 账号密码: root / password
+- Passwall/Hello World/OpenClash
+- UU游戏加速器
+- DDNS
+- iperf3 测速
+###### 固件安装
+
 ## 梯子
 ## 存储方案
 ## 测速
