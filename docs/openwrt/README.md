@@ -1,402 +1,113 @@
-# Greate Wall
-
-## OpenWrt
-
-### OpenWRT 历史
-
-![The History of OpenWRT](./openwrt.png)
-
-1. 基于 Linux 的开源项目
-2. 丰富的插件可以扩展
-3. 主流的路由器厂商也都是基于 OpennWRT 开发的路由器固件
-
-### OpenWRT 目录结构及重要文件
-
-1. feeds.conf.default 中制定扩展的软件包, 例如 lean 的版本中没有 Passwall, 可以在这个文件中添加
-
-```
-#src-git helloworld https://github.com/fw876/helloworld
-src-git lienol https://github.com/kenzok8/openwrt-packages
-src-git small https://github.com/kenzok8/small.git
-```
-
-然后更新和安装添加的软件包
-
-```bash
-./scripts/feeds update -a
-./scripts/feeds install -a
-```
-
-2. .config 是由 make menuconfig 生成的
-3. bin/targets/x86/64 包含了最后生成的固件
-   在下载 openwrt 系统时，经常能看到 initramfs-kernel.bin，squashfs-factory.bin，squashfs-sysupgrade.bin 等结尾的文件，factory 适用于从原厂系统刷到 openwrt，sysupgrade 则是从 openwrt 刷到 openwrt（已经是 openwrt 系统，在 openwrt 系统中更新自己），squashfs 则是一种文件系统，适用于嵌入式设备。那么 initramfs-kernel 又是什么呢。initramfs 是放在内存 RAM 中的 rootfs 映像文件，跟 kernel 放在一起。一般来说用不到 initramfs-kernel.bin 来刷机，因为启动后，所有的配置在路由器重启后都不能保留（毕竟 ram 文件系统，所有文件放在 ram 中，断电就没了）。但也有用到 initramfs-kernel.bin 的时候，就是在移植 openwrt 系统的时候，没有设备上的 flash 闪存的驱动的时候。
-
-4. 默认配置
-
-```
-package/lean/default-settings/files/zzz-default-settings #默认设置
-package/lean/default-settings/files/bin/config_generate  #网络配置？在我的目录下没有
-feeds/luci/modules/luci-base/root/etc/config/luci        #修改默认语言和主题
-```
-
-5. 保留配置的步骤：
-   1. 提取路由固件下的\etc\config\network
-   2. 在编译机 OpenWrt 根目录下创建 files 目录
-   3. 拷贝到 files/etc/config/network 这样编译完，network 就是你自己配置好的 network，注意提取的文件路径和权限要一致
-
-```
-# 运行环境下的一些常见的配置文件路径：
-/etc/config         #各个LUCI配置
-/etc/gfwlist        #gfwlist目录
-/etc/shadow         #登录密码
-/etc/firewall.user  #自定义防火墙规则
-/usr/share/adbyby   #adbyby里的相关规则和设置
-/usr/lib/lua/luci/view/admin_status/index.htm #主页样式文件，温度显示等等
-```
-
-### menuconfig 的配置，配置 Newifi D2 和 X64
-
-一个 excel 维护的配置清单[OpenWRT 编译 make menuconfig 配置及 LUCI 插件说明.xlsx](https://www.wil.ink/links/799)
-
-1. 设置目标平台
-   ![target](./target-subtarget-targetprofile.png)
-
-2. 指定 image 类型，确认选中 squashfs
-   ![image](./target-images.png)
-
-3. 基本配置
-   Newifi D2 确认旋转 blockd, X64 不知道要不要选？
-   ![blockd](./basesystem-blockd.png)
-   ![dnsmasq-full](./basesystem-dnsmasq-full.png)
-   ![admin-htop](./admin-htop.png)
-
-4. USB 和无线网络驱动
-   ![USB](./usbsupport-kmodusb2.png)
-   在 Newifi D2 下添加无线网卡  
-   ![Wireless](./wirelessdrivers-kmodmt7603-mt76x2.png)
-   **kmod-mt7603 与 kmod-mt7603e 冲突
-   kmod-mt76x2 与 kmod-mt76x2e 冲突**
-5. 常用 Luci 模块，根据需要选择
-
-```
-luci-app-accesscontrol 上网时间控制
-luci-app-adbyby-plus 广告屏蔽大师Plus +
-luci-app-amule         电驴下载
-luci-app-aria2         Aria2下载
-luci-app-arpbind IP/MAC绑定
-luci-app-ddns         动态域名解析
-luci-app-flowoffload Turbo ACC  FLOW转发加速
-luci-app-frpc         内网穿透 Frp
-luci-app-hd-idle 硬盘休眠
-luci-app-ipsec-vpnd  IPSec服务端
-luci-app-mwan3         MWAN负载均衡
-luci-app-nlbwmon 网络带宽监视器
-luci-app-openvpn OpenVPN客户端
-uci-app-openvpn-server OpenVPN服务端
-luci-app-pptp-server  PPTP服务端
-luci-app-ramfree 释放内存
-luci-app-samba         网络共享(samba)
-luci-app-sfe         Turbo ACC网络加速(开启Fast Path转发加速)
-luci-app-sqm         流量智能队列管理(QOS)
-luci-app-ssr-plus SSR Plus，翻墙3合一工具
-luci-app-transmission BT下载
-luci-app-upnp         通用即插即用UPnP(端口自动转发)
-luci-app-usb-printer USB 打印服务器
-luci-app-vlmcsd         KMS服务器（WIN VLK 激活工具）
-luci-app-vsftpd         FTP服务器
-luci-app-webadmin Web管理
-luci-app-wireguard VPN服务器 WireGuard状态
-luci-app-wol         网络唤醒
-luci-app-wrtbwmon 实时流量监测
-```
-
-6. 其他
-   ![ddns](./ipaddress-and-names-ddns-scripts-no-ip.png)
-   ![download](./bittorrent-transmissionweb.png)
-
-   transmission-web 与 transmission-web-control 冲突
-
-### OpenWRT 在本地 Linux 下编译
-
-#### 编译 Lienol 源
-
-#### 编译 Lean 源
-
-1. 更新操作系统和编译器依赖
-
-```bash
-sudo apt-get update
-sudo apt-get -y install build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch python3 python2.7 unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs git-core gcc-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler g++-multilib antlr3 gperf wget curl swig rsync
-```
-
-2. 下载源代码
-   git clone https://github.com/coolsnowwolf/lede.git lean
-
-3. 添加富强模块
-   编辑 feeds.conf.default
-
-```
-#src-git helloworld https://github.com/fw876/helloworld
-src-git lienol https://github.com/kenzok8/openwrt-packages
-src-git small https://github.com/kenzok8/small.git
-```
-
-4. 更新添加的模块
-
-```
-./scripts/feeds update -a
-./scripts/feeds install -a
-make defconfig            #测试编译环境
-make menuconfig           #配置编译
-```
-
-5. 编译
-
-```
-make -j8 download V=s     #预下载
-find dl -size -1024c -exec ls -l {} \;  #检查文件完整性
-make -j1 V=s
-```
-
-#### 再次编译
-
-```
-make clean             #清除旧的编译产物（可选）
-#在源码有大规模更新或者内核更新后执行，以保证编译质量。此操作会删除/bin和/build_dir目录中的文件。
-
-make dirclean             #清除旧的编译产物、交叉编译工具及工具链等目录（可选）
-#更换架构编译前必须执行。此操作会删除/bin和/build_dir目录的中的文件(make clean)以及/staging_dir、/toolchain、/tmp和/logs中的文件。
-
-make distclean            #清除 Open­Wrt 源码以外的文件（可选）
-#除非是做开发，并打算 push 到 GitHub 这样的远程仓库，否则几乎用不到。此操作相当于make dirclean外加删除/dl、/feeds目录和.config文件。
-
-git clean -xdf            #还原 Open­Wrt 源码到初始状态（可选）
-#如果把源码改坏了，或者长时间没有进行编译时使用。
-
-rm -rf tmp                #清除编译缓存
-#此操作据说可防止make menuconfig加载错误，暂时没遇到过，如有错误欢迎大佬指正。
-
-rm -f .config             #删除配置文件（可选）
-#可以理解为恢复默认配置，建议切换架构编译前执行。
-```
-
-#### 使用 Github Action 编译 OpenWRT
-
-可以从本地的编译环境提取.config 配置文件，放在[build-openwrt](git@github.com:quboqin/build-openwrt.git)
-或者需要 SSH 连接则把 SSH connection to Actions 的值改为 true
-点击 Actions
-
-##### R4S
-quboqin/NanoPi-R4S
-forked from DHDAXCW/NanoPi-R4S
-[NanoPi-R4S-2021 每天自动更新插件和内核版本](git@github.com:quboqin/NanoPi-R4S.git)
-
-##### X86
-quboqin/FusionWRT_x86_x64
-forked from DHDAXCW/FusionWRT_x86_x64
-[x86-x64 每天自动更新插件和内核版本](git@github.com:quboqin/FusionWRT_x86_x64.git)
-
-##### 新路由3
-[OpenWrt-Actions & One-key AutoUpdate](https://github.com/Hyy2001X/AutoBuild-Actions)
-
-
-##### 创建多个 workflow，同时编译两个平台
-
-### 刷入固件的方法
-
-1. DiskImage 直接刷写
-   制作一个 PE 盘，把 DiskImage 和 LEDE 固件拷贝到 PE 盘，插到路由上，启动 PE，然后和方法一差不多，打开 DiskImage，选择软路由上的那块硬盘，选择 OpenWrt.img，点开始，等进度条结束，然后关机，拔掉 U 盘，再开机就可以了
-2. 用 physdiskwrite 刷写
-   刷写方法：制作一个 PE 盘，把 physdiskwrite 和 LEDE 固件拷贝到 PE 盘（同一个目录下，建议放在根目录，就是打开 U 盘就能看到的那个目录），插到路由上，启动 PE，然后查看下存放固件的盘符（这里举例为 U:盘），打开 cmd（不懂的就按 Win 建+r 键，输入 cmd 回车，Win 键就是键盘左下方是 Windows 图标的那个按键）
-   　　输入 U: （回车确定，切换到 U 盘的目录）
-   　　输入 physdiskwrite -u OpenWrt.img（回车确定）
-   　　然后会显示目前检测到的硬盘，输入 0 或者 1 选择要刷写到哪个盘（看容量，选择硬盘的那个编号），按 Y 确定，之后等待刷写结束就可以了，然后关机，拔掉 U 盘，再开机就可以了.
-3. 修改 ip 地址
-
-```
-vi /etc/config/network
-```
-
-### 刷机新路由 D2
-
+# 科学上网
+## 解决的问题
+1. 科学上网
+2. 1000M高速访问互联网
+3. 1000M高速内网互联
+4. 搭建私有云盘，建立家庭多媒体和文件中心，并和公有云同步
+5. 外网穿透，访问内网私有云，远程访问内网设备和PC/MAC/Linux终端
+## 网络拓扑
+### 外网
+![openwrt-外网.drawio](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesopenwrt-%E5%A4%96%E7%BD%91.drawio.png)
+### 内网
+![openwrt-内网.drawio](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesopenwrt-%E5%86%85%E7%BD%91.drawio.png)
+## 路由器固件
+### 安装
+#### Newifi 3(新路由3)
+##### 固件下载
+###### 资源的地址
+[恩山论坛 - 【2022.5.3 更新】新路由3/小娱 Lean源码 支持一键更新固件(https://www.right.com.cn/forum/thread-4047888-1-1.html)
+###### 固件基本信息
+- 管理地址: 192.168.1.1
+- 账号密码: root / password
+- SSR Plus
+- 阿里云盘 Webdav
+- Aria2
+- DDNS
+###### 固件后缀的含义，分区类型和固件类型
+在下载 openwrt 系统时，经常能看到 initramfs-kernel.bin，squashfs-factory.bin，squashfs-sysupgrade.bin 等结尾的文件，factory 适用于从原厂系统刷到 openwrt，sysupgrade 则是从 openwrt 刷到 openwrt（已经是 openwrt 系统，在 openwrt 系统中更新自己），squashfs 则是一种文件系统，适用于嵌入式设备。那么 initramfs-kernel 又是什么呢。initramfs 是放在内存 RAM 中的 rootfs 映像文件，跟 kernel 放在一起。一般来说用不到 initramfs-kernel.bin 来刷机，因为启动后，所有的配置在路由器重启后都不能保留（毕竟 ram 文件系统，所有文件放在 ram 中，断电就没了）。但也有用到 initramfs-kernel.bin 的时候，就是在移植 openwrt 系统的时候，没有设备上的 flash 闪存的驱动的时候。
+- bin/img/gz
+###### 固件安装
+![20220514142449](https://raw.githubusercontent.com/quboqin/images/main/blogs/pictures20220514142449.png)
 1. 重置 Breed
-   按住 Reset 不放，将电源再次连接，等待 10s 后，松开 Reset，路由器进入 Breed 模式
-   在浏览器中访问 192.168.1.1
-
-2. 刷入 Openwrt 固件
-
-### 配置 OpenWRT
-
-#### 作为主路由的设置
-
-##### Newifi D2 作为主路由, AX3600 有线中继
-
-1. Newifi D2 作为主路由 设置
-   1. 状态
-      ![newifi-status](./newifi-status.png)
-   2. 修改密码，开启 SSH
-      ![newifi-ssh](./newifi-ssh.png)
-   3. LAN 接口设置，开启 DHCP
-      ![newifi-dhcp](./newifi-dhcp.png)
-   4. WAN 拨号设置
-      ![newifi-wan](./newifi-wan.png)
-   5. DNS 设置，开启 Turbo ACC 网络加速
-      ![newifi-dns-1](./newifi-dns-1.png)
-      ![newifi-dns-2](./newifi-dns-2.png)
-   6. 端口转发
-      ![newifi-port](./newifi-port.png)
-
-#### 作为旁路由的设置
-
-0. 主路由设置
-
-   1. 基本信息
-      ![ax3600-brief](./ax3600-brief.png)
-   2. 连接设备
-      ![ax3600-mesh](./ax3600-mesh.png)
-   3. 宽带拨号和工作模式
-      ![ax3600-dialup](./ax3600-dialup.png)
-   4. 局域网设置和 DHCP 服务
-      ![ax3600-dhcp](./ax3600-dhcp.png)
-   5. DDNS 设置
-      ![ax3600-ddns-1](./ax3600-ddns-1.png)
-      ![ax3600-ddns-2](./ax3600-ddns-2.png)
-
-   6. 端口映射
-      ![ax3600-port](./ax3600-port.png)
-
-1. 单臂路由，配置 LAN 口
-   1. 不要删除 wan/wan6 接口
-   2. 协议设置为“静态地址”，设置静态地址，子网掩码，网关和广播地址
-   3. 设置自定义的 DNS 服务器, 指向主路由
-
+   按住 Reset 不放，将电源再次连接，等待 10s 后，松开 Reset，路由器进入 Breed 模式, 接笔记本或PC的有线网络(无线网络仍然可以上网，有线网口不需要设置为静态IP)
+2. 在浏览器中访问 192.168.1.1，刷入 Openwrt 固件
+3. 等待重启(时间较长)，输入新的IP地址(固件默认的IP地址)，登入OpenWrt后台
+4. 进入“网络->接口->LAN”，修改IP地址为静态地址（这里是192.168.123.6），网关和DNS（这里先指向现路由器192.168.123.4），关闭DHCP和IPV6，保存后，网线接入使用中的路由器，进行下一步配置
+![Screen Shot 2022-05-14 at 14.30.06](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2014.30.06.png)
+![Screen Shot 2022-05-14 at 14.36.09](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2014.36.09.png)
+##### 固件配置(Pre)
+1. 配置网络->接口
+- 检查LAN接口的“物理设置”和“防火墙设置”
+- 配置WAN接口
+   - 设置 PPPOE 的拨号账号
+![Screen Shot 2022-05-14 at 14.50.34](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2014.50.34.png)
+   - 关闭 ‘使用对端通告的 DNS 服务器’
+   - 添加 ‘使用自定义的 DNS 服务器’
+![Screen Shot 2022-05-14 at 14.47.41](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2014.47.41.png)
+- 检查LAN接口的“物理设置”和“防火墙设置”
+- 如果要访问光猫添加一个WAN0的接口，复用WAN的物理接口
+![Screen Shot 2022-05-14 at 14.53.28](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2014.53.28.png)
+2. 关闭 Turbo ACC 中的 DNS 缓存
+![Screen Shot 2022-05-14 at 14.58.43](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2014.58.43.png)
+3. 检查防火墙的设置
+在“网络->防火墙->自定义规则”中，开启
 ```
-192.168.123.2
-```
-
-![接口设置](./general-setting.png)
-
-4.  关闭桥接，需要重新选择接口
-    ![关闭桥接](./close-bridge.png)
-    **以上操作不要按’保存及应用‘，只要保存**
-
-5.  配置防火墙, 添加“自定义规则”
-
-```
-# This file is interpreted as shell script.
-# Put your custom iptables rules here, they will
-# be executed with each firewall (re-)start.
-
-# Internal uci firewall chains are flushed and recreated on reload, so
-# put custom rules into the root chains e.g. INPUT or FORWARD or into the
-# special user chains, e.g. input_wan_rule or postrouting_lan_rule.
 iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53
 iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 53
-iptables -t nat -I POSTROUTING -j MASQUERADE
+[ -n "$(command -v ip6tables)" ] && ip6tables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53
+[ -n "$(command -v ip6tables)" ] && ip6tables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 53
 ```
-
-重启防火墙，并’保存及应用‘
-
-6.  设置 DHCP 服务器，单臂路由强制使用此网络上的 DHCP，关闭主路由 DHCP
-    AX3600 作为主路由，新的固件版本可以设置 DHCP 的 DNS 和 Gateway，主路由可以作为 DHCP 服务器，网关和 DNS 设置为旁路由，旁路有的网关指向主路由
-
-#### 开启 Turbo ACC 网络加速
-
-1. 开启 DNS 加速(可选)
-   会改变 DHCP/DNS 设置中的“DNS 转发”
-
-2. 检查 DHCP/DNS 设置
-
-详见[Lean OpenWrt DNS 解析流程研究](https://renyili.org/post/openwrt_dns_process/)
-![DNS](./dns.png)
-
-#### 启动 UPnP
-
-#### 设置 Passwall
-
-1. 设置 DNS
-   有 ChinaDNS-NG，可以开启 ChinaDNS-NG，但是这样就不需要 Turbo ACC 网络加速中的 DNS 加速了
-   配置 ChinaDNS-NG 的解析本地和白名单的(UDP) 116.228.111.118
-
-2. 配置 pdnsd
-
-3. 将 NAS 的 IP 地址添加到 Passwall 的发访控制中
-   ![NAS访问控制](./access-control.png)
-
-#### NAS 的设置
-
-1. 端口转发，将 NAS 的 SSH, WEB 端口(5000)和 SMB 端口(137/138/139/445)，转发到 NAS 服务器
-   ![ax3600-port](./ax3600-port-forward.png)
-   ![nas-port](./nas-port-forward.png)
-
-2. 设置 NAS 的 DNS
-   ![NAS DNS](./nas-dns.png)
-
-3. 设置 NAS 的网卡
-   ![NAS Interface](./nas-interface.png)
-
-4. 添加主路由到 NAS Allow List
-   ![allow-list](./nas-allow-list.png)
-
-#### 排除 DNS 问题
-
-1. clean DNS
-   @Macos
-   sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder
-
-   @Windows10
-   ipconfig /flushdns
-
-2. 安装 dig
-
-```shell
-opkg update && opkg install bind-dig bind-libs
+4. 修改登录密码，添加 SSH Key
+5. 配置梯子客户端
+- passwall
+- ssr plus
+6. 启动 NTP 客户端
+##### 固件配置(Pro)
+1. 配置“网络->接口->LAN”
+- 开启 DHCP
+![Screen Shot 2022-05-14 at 15.07.31](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2015.07.31.png)
+- 删除网关和 DNS
+![Screen Shot 2022-05-14 at 15.07.17](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2015.07.17.png)
+2. DHCP 中添加静态路由
+![Screen Shot 2022-05-14 at 15.09.51](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2015.09.51.png)
+3. 配置 DDNS
+- 阿里云
+![Screen Shot 2022-05-14 at 15.11.31](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2015.11.31.png)
+** 要在高级设置里修正来源，如果之前在局域网里作为副路由设置过 **
+![Screen Shot 2022-05-14 at 16.16.16](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2016.16.16.png)
+- DDNS.to(备选)
+![Screen Shot 2022-05-14 at 15.13.49](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2015.13.49.png)
+要修改 ddnsto 站点上的域名映射配置
+4. 设置阿里云盘 webdav 服务本地映射，在浏览器获取 refresh token
+![Screen Shot 2022-05-14 at 15.31.22](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2015.31.22.png)
+5. 导入端口映射表
 ```
-
-3. 查看端口
-
-```shell
-netstat -tunlp
-lsof -i:53
+scp root@192.168.123.6:/etc/config/firewall ~/Desktop/firewall
 ```
-
-4. 使用 dig
-
+从firewall-rediect添加分几类
+- nas(24xx)
+   - smb
+   - webdav
+   - portal
+   - ssh
+- x86 openwrt(20xx)
+   - portal
+   - ssh
+- arm openwrt(22xx)
+   - portal
+   - ssh
+- mips openwrt(25xx)
+   - portal
+   - ssh
+- aria2
+   - backend(16800, 19720710)
+   - aria2ng(10000, portal)
+- aliyun-webdav
 ```
-dig www.google.com
-dig @8.8.8.8 www.google.com
-dig @127.0.0.1 -p 53 www.google.com
-dig www.google.com +trace
+scp ~/Desktop/firewall root@192.168.123.6:/etc/config/firewall
 ```
-
-5. 使用 nslookup
-
-## 安装 VPS
-
-### 在 namecheap 上申请域名
-
-### 注册 cloudflare 账号，并将 namecheap 的域名托管给 cloudflare
-
-### 创建 VPS
-
-0. 创建 VPS，cloudflare 上二级指向该 VPS 的 IP 地址
-
-1. 安装 7 合 1 脚本
-   [快速部署 Xray V2ray SS Trojan Trojan-go 七合一共存一键脚本+伪装博客](https://wxf2088.xyz/2321.html)
-   要填写域名，申请证书
-
-1. BBR 加速脚本集合。包含 BBR Plus/BBR 原版/BBR 魔改版，开启自带 BBR 加速，BBR 四合一脚本等。
-   [BBR 加速脚本集合](https://www.v2rayssr.com/bbr.html)
-
-1. 高级模式
-   1. 选择 IP
-   2. 在 cloudflare 上配置 worker
-
-### 客户端安装和配置
-
-1. windows 环境下安装 Winxray，关闭 Mcafee 报警
-2. Macos 下安装 Clash for Windows
-3. iOS 下用美国账号安装 Shadowrocket
-4. Android 下的客户端
-
-### DDNS 的申请和配置, 花生壳和 Windows 远程服务
+6. 在梯子中添加 VPS
+7. 配置 UU 游戏加速器，是否要关闭其他路由器的UU加速器，解绑并重新绑定
+## 梯子
+## 存储方案
+## 测速
