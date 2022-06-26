@@ -10,19 +10,20 @@ config defaults
 
 config zone
 	option name 'lan'
+	list network 'lan'
 	option input 'ACCEPT'
 	option output 'ACCEPT'
 	option forward 'ACCEPT'
-	option network 'lan'
 
 config zone
 	option name 'wan'
+	list network 'wan'
+	list network 'wan6'
 	option input 'REJECT'
 	option output 'ACCEPT'
 	option forward 'REJECT'
 	option masq '1'
 	option mtu_fix '1'
-	option network 'wan wan6'
 
 config forwarding
 	option src 'lan'
@@ -381,26 +382,6 @@ config redirect
 	option src 'wan'
 	option dest 'lan'
 	option proto 'tcp udp'
-	option src_dport '2080'
-	option dest_ip '192.168.123.4'
-	option dest_port '80'
-	option name 'x86-web'
-
-config redirect
-	option target 'DNAT'
-	option src 'wan'
-	option dest 'lan'
-	option proto 'tcp udp'
-	option src_dport '2022'
-	option dest_ip '192.168.123.4'
-	option dest_port '22'
-	option name 'x86-ssh'
-
-config redirect
-	option target 'DNAT'
-	option src 'wan'
-	option dest 'lan'
-	option proto 'tcp udp'
 	option src_dport '2280'
 	option dest_ip '192.168.123.5'
 	option dest_port '80'
@@ -415,26 +396,6 @@ config redirect
 	option dest_ip '192.168.123.5'
 	option dest_port '22'
 	option name 'arm-ssh'
-
-config redirect
-	option target 'DNAT'
-	option src 'wan'
-	option dest 'lan'
-	option proto 'tcp udp'
-	option src_dport '2580'
-	option dest_ip '192.168.123.6'
-	option dest_port '80'
-	option name 'mips-web'
-
-config redirect
-	option target 'DNAT'
-	option src 'wan'
-	option dest 'lan'
-	option proto 'tcp udp'
-	option src_dport '2522'
-	option dest_ip '192.168.123.6'
-	option dest_port '22'
-	option name 'mips-ssh'
 
 config redirect
 	option target 'DNAT'
