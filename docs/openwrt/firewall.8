@@ -477,6 +477,16 @@ config redirect
 	option dest_port '22'
 	option name 'x86-5105-ssh'
 
+config redirect
+	option target 'DNAT'
+	option src 'wan'
+	option dest 'lan'
+	option proto 'tcp udp'
+	option src_dport '8181'
+	option dest_ip '192.168.123.8'
+	option dest_port '8181'
+	option name 'Aliyun '
+
 config include 'iptvhelper'
 	option type 'script'
 	option path '/etc/firewall.iptvhelper'
