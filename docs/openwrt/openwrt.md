@@ -1,4 +1,4 @@
-# Greate Wall
+# Great Wall
 
 ## OpenWrt
 
