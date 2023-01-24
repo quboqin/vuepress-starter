@@ -35,7 +35,7 @@ src-git small https://github.com/kenzok8/small.git
 
 ```
 package/lean/default-settings/files/zzz-default-settings #默认设置
-package/lean/default-settings/files/bin/config_generate  #网络配置？在我的目录下没有
+package/base-files/files/bin/config_generate  #网络配置
 feeds/luci/modules/luci-base/root/etc/config/luci        #修改默认语言和主题
 ```
 
