@@ -1,0 +1,43 @@
+tun0      Link encap:UNSPEC
+          inet addr:172.19.0.1  P-t-P:172.19.0.1  Mask:255.255.255.252
+          inet6 addr: fe80::966c:996c:887d:1efb/64 Scope: Link
+          UP POINTOPOINT RUNNING  MTU:9000  Metric:1
+          RX packets:16080 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:16253 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:500
+          RX bytes:13346876 TX bytes:10717886
+
+lo        Link encap:UNSPEC
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope: Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:29037 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:29037 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:46085171 TX bytes:46085171
+
+wlan0     Link encap:UNSPEC    Driver wlan
+          inet addr:172.20.28.30  Bcast:172.20.29.255  Mask:255.255.254.0
+          inet6 addr: fe80::a4ea:39ff:fe49:a1bf/64 Scope: Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:15441 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:3748 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:3000
+          RX bytes:7332050 TX bytes:462537
+
+ccmni1    Link encap:UNSPEC
+          inet6 addr: 240e:56c:8710:a3ea:1745:69fc:ed4f:e755/64 Scope: Global
+          inet6 addr: fe80::1745:69fc:ed4f:e755/64 Scope: Link
+          UP RUNNING NOARP  MTU:1400  Metric:1
+          RX packets:4 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:2 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:324 TX bytes:108
+
+dummy0    Link encap:UNSPEC
+          inet6 addr: fe80::b454:3aff:feca:588e/64 Scope: Link
+          UP BROADCAST RUNNING NOARP  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:2499 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:0 TX bytes:620934
