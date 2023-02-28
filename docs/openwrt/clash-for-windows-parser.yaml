@@ -1,0 +1,10 @@
+parsers: # array
+  - url: https://zcsub.xyz/link/UfD31WaJH1CWbvMi?clash=1
+    yaml:
+      prepend-rules:
+        - DOMAIN-SUFFIX, openai.com, GLOBAL
+        - DOMAIN-SUFFIX, podcasts.apple.com, PROXY
+        - DOMAIN, bookkeeper.itunes.apple.com, PROXY
+        - DOMAIN, play.itunes.apple.com, PROXY
+        - DOMAIN, xp.apple.com, PROXY
+        - DOMAIN, bag.itunes.apple.com, PROXY
