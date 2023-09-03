@@ -17,6 +17,17 @@
 - Midjourney 的子程序 nijijourney 无视版权，大量收集个人画师们的图片用于训练模型
 ## 版权问题
 ## 国内外的主要玩家
+### Midjourney
+[AI绘画工具Midjourney：和Discord互相成就](https://www.woshipm.com/ai/5670888.html)
+> Midjourney is an independent research lab exploring new mediums of thought and expanding the imaginative powers of the human species.
+
+> We are a small self-funded team focused on design, human infrastructure, and AI. We have 11 full-time staff and an incredible set of advisors.
+
+> “A lot of people ask us, why don’t you just make an iOS app that makes you a picture?” Midjourney’s founder, David Holz, told The Verge in an interview. “But people want to make things together, and if you do that on iOS, you have to make your own social network. And that’s pretty hard. So if you want your own social experience, Discord is really great.”
+
+![Théâtre D’opéra Spatial](https://image.woshipm.com/wp-files/2022/11/F7QyZpgt6YoPlo8KglyO.png)
+![Qubo_Happy_fat_rabbit_with_big_ears_wishes_everyone_a_happy_Chi_c6f8c0b4-bc78-44ea-9cdd-ca0eee3ce991](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesQubo_Happy_fat_rabbit_with_big_ears_wishes_everyone_a_happy_Chi_c6f8c0b4-bc78-44ea-9cdd-ca0eee3ce991.png)
+![Qubo_Happy_fat_rabbit_with_big_ears_wishes_everyone_a_happy_Chi_d1bcbe5c-7dd6-48ac-b2dc-88196e760141](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesQubo_Happy_fat_rabbit_with_big_ears_wishes_everyone_a_happy_Chi_d1bcbe5c-7dd6-48ac-b2dc-88196e760141.png)
 ### 盗梦师 toB 产品负责人李庆, 市场营销的全新方式, 用AIGC生成有用户个性的品牌素材,
 - 有一些C端用户将自己生成的绘画作品拿到淘宝进行售卖，一幅作品的价格能够卖到300元左右，而生成的成本只有几毛钱。在这样的模式之下，AI绘画在C端的商业价值进一步被放大
 ### 百度, 文心一格

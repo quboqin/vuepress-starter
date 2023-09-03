@@ -3,6 +3,7 @@ parsers: # array
     yaml:
       prepend-rules:
         - DOMAIN-SUFFIX, openai.com, GLOBAL
+        - DOMAIN-SUFFIX, discord.com, PROXY
         - DOMAIN-SUFFIX, podcasts.apple.com, PROXY
         - DOMAIN, bookkeeper.itunes.apple.com, PROXY
         - DOMAIN, play.itunes.apple.com, PROXY
