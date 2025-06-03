@@ -65,6 +65,17 @@ OpenWrt 演进过程中主要版本及其差异可以梳理如下：
 | 2 | Lienol        | 快速         | 6.6      | 官方         | 一般     | 不支持   | 免费       | 轻量、稳定       |
 | 3 | iStoreOS      | 慢           | 5.15     | 自建         | 丰富     | 不支持   | 部分闭源   | 新手、NAS需求    |
 | 4 | KWRT          | 一般         | 5.15     | 自建         | 丰富     | 支持     | 部分付费   | 喜欢自定义       |
+### build and deploy
+#### openwrt源代码的解释
+#### image格式的解释
+|后缀|解释|
+|----|----|
+|.img.gz|`.img`表示这是一个包含完整OpenWRT系统的镜像文件；`.gz`表示这是一个压缩文件，需解压后使用或被刷机工具识别（部分工具如Rufus可直接处理.gz压缩文件）|
+|ext4|一种常见的文件系统格式。使用该格式的固件，对配置文件的修改会直接写入文件系统，不提供通过抹除Overlay分区来恢复出厂设置的机制|
+|squashfs|一种文件系统格式。该格式的固件会将修改的配置文件写入挂载的overlay分区，允许用户通过抹除overlay分区来恢复出厂设置|
+|combined|表示固件中包含了内核（kernel）和根文件系统（root file system）的组合，整个操作系统都在这一个文件中|
+|efi（或ufi）|表示固件支持EFI（统一可扩展固件接口）引导类型，近些年的主板通常都支持EFI引导|
+|legacy|表示固件支持传统的Legacy引导类型，若主板不支持EFI引导或不确定支持哪种引导，可选择刷入这种固件|
 #### build an image from the offical website
 #### build with github action
 #### build on wsl
