@@ -1,11 +1,19 @@
 # build a flexible network for a small business
+
 ## topology of my network
+
 ### main route mode
+
 ### side route mode
-![alt text](openwrt-side-route.drawio.png) 
+
+![alt text](openwrt-side-route.drawio.png)
+
 ## soft route
+
 ### openwrt
+
 #### history
+
 - 2002年：OpenWRT的起源
     * 事件：LinkSys WRT 54G 发布
         * 描述：OpenWRT项目的历史可以追溯到2002年发布的LinkSys WRT 54G路由器
@@ -28,7 +36,7 @@
         * 描述：到了2018年，LEDE项目与原OpenWRT项目决定重新合并，并统一继续使用OpenWRT的名称
         * 影响：这次合并标志着现代OpenWRT的形成，并继承了LEDE的许多改进
 
-- 现代OpenWRT (2018年后) 的主要衍生版本**
+- 现代OpenWRT (2018年后) 的主要衍生版本
     * KoolShare (软件中心)
         * 描述：作为新OpenWRT的一个流行分支，KoolShare版本以其集成了便捷的“软件中心”功能而闻名，方便用户安装和管理各种插件
     * LEAN LEDE
@@ -41,9 +49,11 @@
     * Lienol
         * 描述：Lienol是新OpenWRT的又一个分支版本
         * 主要区别与特点：Lienol编译的固件与其他版本的一个显著区别在于其包含的插件组合。例如，文中提到Lienol版本会包含 "passwall" 插件和 "ssr-plus" 插件，这反映了其在特定功能插件集成上的侧重
-![alt text](openwrt-history.drawio.png)     
+
+![alt text](openwrt-history.drawio.png)
 
 #### version
+
 OpenWrt 演进过程中主要版本及其差异可以梳理如下：
 
 |    | 版本名称                 | 发布时间      | 主要特点与技术变化                                                                                                                               |
@@ -62,6 +72,7 @@ OpenWrt 演进过程中主要版本及其差异可以梳理如下：
 | 11 | OpenWrt 24.10            | 2025年        | 最新稳定版，内核升级至 6.6，支持 Wi-Fi 6 和初步 Wi-Fi 7，默认启用 TLS 1.3，支持 Multipath TCP，激活 POSIX 访问控制列表。                                                                 |
 
 主流版本的差异
+
 |   | 固件/分支     | 上游版本跟进 | 内核版本 | 软件源类型   | 插件生态 | 在线定制 | 付费情况   | 适合用户         |
 |---|---------------|--------------|----------|--------------|----------|----------|------------|------------------|
 | 0 | ImmortalWRT   | 快速         | 6.6      | 自建         | 丰富     | 支持     | 免费       | 动手能力强、定制化 |
@@ -69,9 +80,13 @@ OpenWrt 演进过程中主要版本及其差异可以梳理如下：
 | 2 | Lienol        | 快速         | 6.6      | 官方         | 一般     | 不支持   | 免费       | 轻量、稳定       |
 | 3 | iStoreOS      | 慢           | 5.15     | 自建         | 丰富     | 不支持   | 部分闭源   | 新手、NAS需求    |
 | 4 | KWRT          | 一般         | 5.15     | 自建         | 丰富     | 支持     | 部分付费   | 喜欢自定义       |
+
 ### build and deploy
+
 #### openwrt源代码的解释
+
 #### image格式的解释
+
 |后缀|解释|
 |----|----|
 |.img.gz|`.img`表示这是一个包含完整OpenWRT系统的镜像文件；`.gz`表示这是一个压缩文件，需解压后使用或被刷机工具识别（部分工具如Rufus可直接处理.gz压缩文件）|
@@ -80,26 +95,34 @@ OpenWrt 演进过程中主要版本及其差异可以梳理如下：
 |combined|表示固件中包含了内核（kernel）和根文件系统（root file system）的组合，整个操作系统都在这一个文件中|
 |efi（或ufi）|表示固件支持EFI（统一可扩展固件接口）引导类型，近些年的主板通常都支持EFI引导|
 |legacy|表示固件支持传统的Legacy引导类型，若主板不支持EFI引导或不确定支持哪种引导，可选择刷入这种固件|
+
 #### build an image from the offical website
+
 ##### 两个官方的网站
+
 1. openwrt
-[openwrt firmware selector](https://firmware-selector.openwrt.org/)
+   [openwrt firmware selector](https://firmware-selector.openwrt.org/)
 2. immortalwrt
-[immortal firmware selector](https://firmware-selector.immortalwrt.org/)
+   [immortal firmware selector](https://firmware-selector.immortalwrt.org/)
 
 ##### 基本步骤
-1. 定制化
-    1. 这是我添加的附加的软件包
-**luci-i18n-dockerman-zh-cn**没有包含在下面是因为默认编译的image size较小, 生成image后要做一次扩容, 然后在线安装
+
+1.  定制化
+    1.  这是我添加的附加的软件包
+
+        **luci-i18n-dockerman-zh-cn**没有包含在下面是因为默认编译的image size较小, 生成image后要做一次扩容, 然后在线安装
+
         ```
         luci-app-argon-config luci-i18n-argon-config-zh-cn luci-i18n-passwall-zh-cn luci-app-openclash luci-i18n-homeproxy-zh-cn openssh-sftp-server luci-i18n-ddns-zh-cn luci-i18n-diskman-zh-cn luci-i18n-autoreboot-zh-cn luci-i18n-upnp-zh-cn luci-i18n-package-manager-zh-cn luci-i18n-firewall-zh-cn luci-i18n-samba4-zh-cn luci-i18n-ttyd-zh-cn bind-dig curl
         ```
-        添加软件包要检查对应版本的列表中是否包含
-        [luci package(https://mirror.nju.edu.cn/immortalwrt/releases/24.10.1/packages/aarch64_generic/luci/)
 
-    2. 首次启动时运行的脚本（uci-defaults）
-        ``` bash
-        # Beware! This script will be in /rom/etc/uci-defaults/         as part of the image.
+        添加软件包要检查对应版本的列表中是否包含
+        [luci package](https://mirror.nju.edu.cn/immortalwrt/releases/24.10.1/packages/aarch64_generic/luci/)
+
+    2.  首次启动时运行的脚本（uci-defaults）
+
+        ```bash
+        # Beware! This script will be in /rom/etc/uci-defaults/ as part of the image.
         # Uncomment lines to apply:
         #
         # wlan_name="ImmortalWrt"
@@ -116,12 +139,12 @@ OpenWrt 演进过程中主要版本及其差异可以梳理如下：
         exec >/tmp/setup.log 2>&1
 
         if [ -n "$root_password" ]; then
-            (echo "$root_password"; sleep 1; echo       "$root_password") | passwd > /dev/null
+            (echo "$root_password"; sleep 1; echo "$root_password") | passwd > /dev/null
         fi
 
         # 我这里修改了LAN的配置, 启动后可以连上, 并可以访问外网
         # Configure LAN
-        # More options: https://openwrt.org/docs/guide-     user/base-system/basic-networking
+        # More options: https://openwrt.org/docs/guide-user/base-system/basic-networking
         if [ -n "$lan_ip_address" ]; then
             uci set dhcp.lan.ignore='1'
             uci set network.lan.ipaddr="$lan_ip_address"
@@ -131,18 +154,18 @@ OpenWrt 演进过程中主要版本及其差异可以梳理如下：
           fi
 
         # Configure WLAN
-        # More options: https://openwrt.org/docs/guide-     user/network/wifi/basic#wi-fi_interfaces
-        if [ -n "$wlan_name" -a -n "$wlan_password" -a      ${#wlan_password} -ge 8 ]; then
+        # More options: https://openwrt.org/docs/guide-user/network/wifi/basic#wi-fi_interfaces
+        if [ -n "$wlan_name" -a -n "$wlan_password" -a ${#wlan_password} -ge 8 ]; then
             uci set wireless.@wifi-device[0].disabled='0'
             uci set wireless.@wifi-iface[0].disabled='0'
             uci set wireless.@wifi-iface[0].encryption='psk2'
             uci set wireless.@wifi-iface[0].ssid="$wlan_name"
-            uci set wireless.@wifi-     iface[0].key="$wlan_password"
+            uci set wireless.@wifi-iface[0].key="$wlan_password"
             uci commit wireless
         fi
 
         # Configure PPPoE
-        # More options: https://openwrt.org/docs/guide-     user/network/wan/wan_interface_protocols#protocol_pppoe     _ppp_over_ethernet
+        # More options: https://openwrt.org/docs/guide-user/network/wan/wan_interface_protocols#protocol_pppoe_ppp_over_ethernet
         if [ -n "$pppoe_username" -a "$pppoe_password" ]; then
             uci set network.wan.proto=pppoe
             uci set network.wan.username="$pppoe_username"
@@ -153,23 +176,28 @@ OpenWrt 演进过程中主要版本及其差异可以梳理如下：
         echo "All done!"
         ```
 
-2. 下载生成的image
-生成的image有两种格式
-- EXT4 不可以恢复出厂设置
-- Squashfs 支持Overlay分区, 可以恢复出厂设置
-**一般选择Squashfs**
+2.  下载生成的image
 
-3. image的扩容
-参考[openwrt基础配置 | openwrt固件选择、扩容、docker安装扩容、网络共享samba4安装配置](https://www.qichiyu.com/183.html)
-    1. 确认是否具备所需依赖, 并上传镜像文件
+    生成的image有两种格式
+    - EXT4 不可以恢复出厂设置
+    - Squashfs 支持Overlay分区, 可以恢复出厂设置
+
+    **一般选择Squashfs**
+
+3.  image的扩容
+
+    参考[openwrt基础配置 | openwrt固件选择、扩容、docker安装扩容、网络共享samba4安装配置](https://www.qichiyu.com/183.html)
+
+    1.  确认是否具备所需依赖, 并上传镜像文件
+
         ```bash
         which gzip
         which dd
         which parted
         ```
 
+    2.  按顺序执行以下命令
 
-    2. 按顺序执行以下命令
         ```bash
         # 切换到上传的目录
         # cd ~
@@ -190,26 +218,34 @@ OpenWrt 演进过程中主要版本及其差异可以梳理如下：
         quit
         ```
 
-4. 烧录image到SD卡上
-![alt text](balena.png)
+4.  烧录image到SD卡上
 
-5. 配置docker 
-    1. 创建docker的数据分区, 磁盘要在安装Docker前配置好
-    创建分区并挂载 /opt/docker 下
+    ![alt text](balena.png)
 
-    2. 安装和配置Docker
-    build的时候选会失败, 可能时image的size太小, 所以之前要扩容
-    ![alt text](<install docker.png>)
+5.  配置docker
+    1.  创建docker的数据分区, 磁盘要在安装Docker前配置好
+        创建分区并挂载 /opt/docker 下
 
-    安装这个package `luci-i18n-dockerman-zh-cn`
-    ```bash
-    docker run hello-world
-    ```
+    2.  安装和配置Docker
+        build的时候选会失败, 可能时image的size太小, 所以之前要扩容
+        ![alt text](install%20docker.png)
+
+        安装这个package `luci-i18n-dockerman-zh-cn`
+
+        ```bash
+        docker run hello-world
+        ```
+
 #### build with github action
+
 https://github.com/quboqin/AutoBuildImmortalWrt
+
 #### build on wsl
+
 ### essential network concepts
+
 #### side route的设置
+
 1. 关闭主路由的DHCP
 2. 旁路由的Gateway和DNS指向主路由
 3. 开启旁路由的DHCP
@@ -217,22 +253,28 @@ https://github.com/quboqin/AutoBuildImmortalWrt
 5. 旁路由可以删除WAN/WAN6
 6. 关闭ipv6
     1. 在LAN的借口上禁用ipv6
-    ![alt text](disable-ipv6-lan.png)
+       ![alt text](disable-ipv6-lan.png)
     2. 过滤 IPv6 AAAA 记录
-    ![alt text](disable-ipv6-aaaa.png)
+       ![alt text](disable-ipv6-aaaa.png)
     3. WAN的上游DNS的设置
-    ![alt text](disable-ipv6-wan.jpg)
+       ![alt text](disable-ipv6-wan.jpg)
     4. 全局的设置
-    ![alt text](全局的设置.png)
+       ![alt text](全局的设置.png)
     5. 光猫上也有一个下发的ipv6设置
+
 #### firewall
+
 #### DNS
+
 ##### DNS Query Process Explained
+
 ###### DNS Basics
+
 - DNS (Domain Name System) translates domain names to IP addresses
 - Operates as a distributed database across multiple servers worldwide
 
 ###### Query Process Steps
+
 1. **Local DNS Cache Check**
    - Browser checks its own cache first
    - Operating system checks its DNS cache
@@ -265,7 +307,7 @@ sequenceDiagram
     participant Root
     participant TLD
     participant Authoritative
-    
+
     Client->>Resolver: DNS Query (example.com)
     alt Cache Hit
         Resolver-->>Client: Return Cached IP
@@ -279,9 +321,10 @@ sequenceDiagram
         Resolver->>Resolver: Cache the response
         Resolver-->>Client: Return IP (1.2.3.4)
     end
-```   
+```
 
 ##### DNS Record Types
+
 - `A`: IPv4 address record
 - `AAAA`: IPv6 address record
 - `CNAME`: Canonical name (alias) record
@@ -290,28 +333,34 @@ sequenceDiagram
 - `TXT`: Text record
 
 ##### Query Optimization
+
 - Caching occurs at multiple levels (browser, OS, resolver)
 - TTL (Time To Live) values control cache duration
 
 ##### Common Tools
+
 - `dig`: DNS lookup utility
 - `nslookup`: Network administration tool
 - `whois`: Domain information tool
 
 ##### Security Considerations
+
 - DNS spoofing/cache poisoning attacks possible
 - DNSSEC (DNS Security Extensions) provides authentication
 
-
 #### DNS解析的拓扑图和流程图
+
 ##### 拓扑图
+
 ![openwrt-Page-4.drawio](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesopenwrt-Page-4.drawio.png)
+
 1. passwall 依赖 dnsmasq 和 pdnsd 两个模块
 2. dnsmasq 在 53 端口监听来自局域网的 DNS 请求，并通过分流策略选择不同的上游 DNS 服务
 3. 代理的 DNS 请求走 pdnsd，pdnsd 起到缓存作用，它自身的上游 DNS 服务器是 1.1.1.1，在 passwall 选项 DNS 的‘远程DNS’中选择
-![r4s-passwall-dns-2](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesr4s-passwall-dns-2.png)
+   ![r4s-passwall-dns-2](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesr4s-passwall-dns-2.png)
 4. 白名单的 DNS 请求，发送给 ‘/tmp/resolv.conf.d/resolv.conf.auto’ 文件中指定的 DNS 服务器
-![r4s-network-dhcp-dns-hosts](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesr4s-network-dhcp-dns-hosts.png)
+   ![r4s-network-dhcp-dns-hosts](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesr4s-network-dhcp-dns-hosts.png)
+
 ```shell
 $ cat /tmp/resolv.conf.d/resolv.conf.auto
 # Interface wan
@@ -319,143 +368,167 @@ nameserver 114.114.114.114
 nameserver 114.114.115.115
 # Interface wan_6
 ```
+
 这里 DNS 的地址又是如何设置的呢？在 ‘网络->接口->WAN->高级设置’ 中 ‘使用对端通告的 DNS 服务器’，如果勾选就使用运营商的 DNS，我这里是上海电信的
+
 ```
 116.228.111.118
 180.168.255.18
 ```
+
 而如果没有勾选，你可以指定 DNS
 ![r4s-network-interface-wan](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesr4s-network-interface-wan.png)
 
 ##### 流程图
+
 整个网络请求分三步
 1. 获取 DNS 服务器的 IP 地址
 2. 用 DNS 服务器的 IP 地址访问DNS服务器获取目标网站的 IP 地址
 3. 用目标网站的 IP 地址访问目标网站
+
 ![dns-flow](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesdns-flow.png)
+
 **图中步骤 3 和 4 在DNS解析过程中也包含了 5/6/7 这三步**
+
 为了让 1.1.1.1不被屏蔽，也走代理，可以把 1.1.1.1加入到passwall的规则列表的的代理列表中
 ![passwall-rule-proxy](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturespasswall-rule-proxy.png)
+
 ##### 其他相关的配置文件和对应的UI的设定
-1. passwall 的 DNS 分流规则文件在 ‘/tmp/dnsmasq.d’ 下
-```shell
-$ ls /tmp/dnsmasq.d/passwall -al
-drwxr-xr-x    2 root     root           140 Feb 12 14:32 .
-drwxr-xr-x    4 root     root           120 Feb 12 14:32 ..
--rw-r--r--    1 root     root          1428 Feb 12 14:32 10-vpsiplist_host.conf
--rw-r--r--    1 root     root          1732 Feb 12 14:32 11-direct_host.conf
--rw-r--r--    1 root     root           334 Feb 12 14:32 97-proxy_host.conf
--rw-r--r--    1 root     root        466479 Feb 12 14:32 99-gfwlist.conf
--rw-r--r--    1 root     root        480471 Feb 12 14:32 ipset.conf
-```
-而 ‘/tmp/dnsmasq.d’ 这个路径是由 ‘/var/etc/dnsmasq.conf.cfg01411c’ 这个文件的 ‘conf-dir’ 字段指定的
-```shell
-# /var/etc/dnsmasq.conf.cfg01411c
-# auto-generated config file from /etc/config/dhcp
-...
-conf-dir=/tmp/dnsmasq.d
-...
-```
-```shell
-# 99-gfwlist.conf
-server=/.zoom.com/127.0.0.1#7913
-server=/.zoom.com.cn/127.0.0.1#7913
-server=/.zoom.us/127.0.0.1#7913
-server=/.zoomingin.tv/127.0.0.1#7913
-```
-```shell
-# 10-vpsiplist_host.conf
-server=/.amd.magicefire.com/114.114.114.114
-server=/.amd.magicefire.com/114.114.115.115
-```
-2. 在‘DHCP/DNS->基本设置->DNS转发’不需要配置
-![dhcp-dns](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesdhcp-dns.png)
 
-3. 关闭 Turbo ACC 网络加速设置的 DNS 缓存
-- DNS 缓存用的也是  pdnsd 模块，在 passwall 已使用，所以没有必要再开启
-- 如果开启了这里的 DNS 缓存，在 DHCP/DNS 的基本设置中 DNS 转发将指向 dnscache, 端口 5333，然后再由 dnscache 指向 pdnsd，而如果 这里 pdnsd 的上游 DNS 设成 114.114.114.114，就不是 1.1.1.1 了
-![turboacc-dns](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesturboacc-dns.png)
-而这时候的 DHCP/DNS 的基本设置的 DNS 转发指向
-![dhcp-dns-转发](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesdhcp-dns-%E8%BD%AC%E5%8F%91.png)
-- 如果配置了 passwall，就按照第一张图的路径
+1.  passwall 的 DNS 分流规则文件在 ‘/tmp/dnsmasq.d’ 下
+
+    ```shell
+    $ ls /tmp/dnsmasq.d/passwall -al
+    drwxr-xr-x    2 root     root           140 Feb 12 14:32 .
+    drwxr-xr-x    4 root     root           120 Feb 12 14:32 ..
+    -rw-r--r--    1 root     root          1428 Feb 12 14:32 10-vpsiplist_host.conf
+    -rw-r--r--    1 root     root          1732 Feb 12 14:32 11-direct_host.conf
+    -rw-r--r--    1 root     root           334 Feb 12 14:32 97-proxy_host.conf
+    -rw-r--r--    1 root     root        466479 Feb 12 14:32 99-gfwlist.conf
+    -rw-r--r--    1 root     root        480471 Feb 12 14:32 ipset.conf
+    ```
+
+    而 ‘/tmp/dnsmasq.d’ 这个路径是由 ‘/var/etc/dnsmasq.conf.cfg01411c’ 这个文件的 ‘conf-dir’ 字段指定的
+
+    ```shell
+    # /var/etc/dnsmasq.conf.cfg01411c
+    # auto-generated config file from /etc/config/dhcp
+    ...
+    conf-dir=/tmp/dnsmasq.d
+    ...
+    ```
+
+    ```shell
+    # 99-gfwlist.conf
+    server=/.zoom.com/127.0.0.1#7913
+    server=/.zoom.com.cn/127.0.0.1#7913
+    server=/.zoom.us/127.0.0.1#7913
+    server=/.zoomingin.tv/127.0.0.1#7913
+    ```
+
+    ```shell
+    # 10-vpsiplist_host.conf
+    server=/.amd.magicefire.com/114.114.114.114
+    server=/.amd.magicefire.com/114.114.115.115
+    ```
+
+2.  在‘DHCP/DNS->基本设置->DNS转发’不需要配置
+    ![dhcp-dns](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesdhcp-dns.png)
+
+3.  关闭 Turbo ACC 网络加速设置的 DNS 缓存
+    - DNS 缓存用的也是  pdnsd 模块，在 passwall 已使用，所以没有必要再开启
+    - 如果开启了这里的 DNS 缓存，在 DHCP/DNS 的基本设置中 DNS 转发将指向 dnscache, 端口 5333，然后再由 dnscache 指向 pdnsd，而如果 这里 pdnsd 的上游 DNS 设成 114.114.114.114，就不是 1.1.1.1 了
+      ![turboacc-dns](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesturboacc-dns.png)
+
+    而这时候的 DHCP/DNS 的基本设置的 DNS 转发指向
+    ![dhcp-dns-转发](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesdhcp-dns-%E8%BD%AC%E5%8F%91.png)
+    - 如果配置了 passwall，就按照第一张图的路径
+
 ##### 常用的命令行检查工具
-1. dnsmasq
-```shell
-$ dnsmasq --test
-dnsmasq: syntax check OK.
-```
 
-2. netstat
-```shell
-$ netstat -nlpt|grep pdnsd
-netstat: showing only processes with your user ID
-tcp        0      0 127.0.0.1:7913          0.0.0.0:*               LISTEN      16460/pdnsd
+1.  dnsmasq
 
-# root @ FusionWrt in ~ [18:22:16]
-$ netstat -nlpt|grep dnsmasq
-tcp        0      0 127.0.0.1:53            0.0.0.0:*               LISTEN      17803/dnsmasq
-tcp        0      0 192.168.123.5:53        0.0.0.0:*               LISTEN      17803/dnsmasq
-tcp        0      0 218.82.184.226:53       0.0.0.0:*               LISTEN      17803/dnsmasq
-tcp        0      0 172.17.0.1:53           0.0.0.0:*               LISTEN      17803/dnsmasq
-tcp        0      0 240e:389:8208:7000::1:53 :::*                    LISTEN      17803/dnsmasq
-tcp        0      0 240e:38f:8e17:1a7e:8234:283f:4633:f18d:53 :::*                    LISTEN      17803/dnsmasq
-tcp        0      0 ::1:53                  :::*                    LISTEN      17803/dnsmasq
-tcp        0      0 fe80::8234:28ff:fe33:f18d:53 :::*                    LISTEN      17803/dnsmasq
-tcp        0      0 fd47:78af:200e::1:53    :::*                    LISTEN      17803/dnsmasq
-tcp        0      0 fe80::8034:28ff:fe33:f18d:53 :::*                    LISTEN      17803/dnsmasq
-```
+    ```shell
+    $ dnsmasq --test
+    dnsmasq: syntax check OK.
+    ```
 
-3. nslookup
-```shell
-$ nslookup -port=7913 www.baidu.com
-Server:		127.0.0.1
-Address:	127.0.0.1:7913
+2.  netstat
 
-Non-authoritative answer:
-www.baidu.com	canonical name = www.a.shifen.com
-www.a.shifen.com	canonical name = www.wshifen.com
-Name:	www.wshifen.com
-Address: 103.235.46.39
+    ```shell
+    $ netstat -nlpt|grep pdnsd
+    netstat: showing only processes with your user ID
+    tcp        0      0 127.0.0.1:7913          0.0.0.0:*               LISTEN      16460/pdnsd
 
-Non-authoritative answer:
-www.baidu.com	canonical name = www.a.shifen.com
-www.a.shifen.com	canonical name = www.wshifen.com
-```
+    # root @ FusionWrt in ~ [18:22:16]
+    $ netstat -nlpt|grep dnsmasq
+    tcp        0      0 127.0.0.1:53            0.0.0.0:*               LISTEN      17803/dnsmasq
+    tcp        0      0 192.168.123.5:53        0.0.0.0:*               LISTEN      17803/dnsmasq
+    tcp        0      0 218.82.184.226:53       0.0.0.0:*               LISTEN      17803/dnsmasq
+    tcp        0      0 172.17.0.1:53           0.0.0.0:*               LISTEN      17803/dnsmasq
+    tcp        0      0 240e:389:8208:7000::1:53 :::*                    LISTEN      17803/dnsmasq
+    tcp        0      0 240e:38f:8e17:1a7e:8234:283f:4633:f18d:53 :::*                    LISTEN      17803/dnsmasq
+    tcp        0      0 ::1:53                  :::*                    LISTEN      17803/dnsmasq
+    tcp        0      0 fe80::8234:28ff:fe33:f18d:53 :::*                    LISTEN      17803/dnsmasq
+    tcp        0      0 fd47:78af:200e::1:53    :::*                    LISTEN      17803/dnsmasq
+    tcp        0      0 fe80::8034:28ff:fe33:f18d:53 :::*                    LISTEN      17803/dnsmasq
+    ```
 
-4. dig
-```shell
-$ dig @8.8.8.8 www.google.com
+3.  nslookup
 
-; <<>> DiG 9.17.13 <<>> @8.8.8.8 www.google.com
-; (1 server found)
-;; global options: +cmd
-;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 24743
-;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+    ```shell
+    $ nslookup -port=7913 www.baidu.com
+    Server:		127.0.0.1
+    Address:	127.0.0.1:7913
 
-;; OPT PSEUDOSECTION:
-; EDNS: version: 0, flags:; udp: 512
-;; QUESTION SECTION:
-;www.google.com.			IN	A
+    Non-authoritative answer:
+    www.baidu.com	canonical name = www.a.shifen.com
+    www.a.shifen.com	canonical name = www.wshifen.com
+    Name:	www.wshifen.com
+    Address: 103.235.46.39
 
-;; ANSWER SECTION:
-www.google.com.		209	IN	A	172.217.163.36
+    Non-authoritative answer:
+    www.baidu.com	canonical name = www.a.shifen.com
+    www.a.shifen.com	canonical name = www.wshifen.com
+    ```
 
-;; Query time: 269 msec
-;; SERVER: 8.8.8.8#53(8.8.8.8) (UDP)
-;; WHEN: Sat Feb 12 18:26:26 CST 2022
-;; MSG SIZE  rcvd: 59
-```
+4.  dig
 
-```shell
-$ dig google.com +trace
-$ dig @8.8.8.8 -p 5300 google.com
-```
+    ```shell
+    $ dig @8.8.8.8 www.google.com
+
+    ; <<>> DiG 9.17.13 <<>> @8.8.8.8 www.google.com
+    ; (1 server found)
+    ;; global options: +cmd
+    ;; Got answer:
+    ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 24743
+    ;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+    ;; OPT PSEUDOSECTION:
+    ; EDNS: version: 0, flags:; udp: 512
+    ;; QUESTION SECTION:
+    ;www.google.com.			IN	A
+
+    ;; ANSWER SECTION:
+    www.google.com.		209	IN	A	172.217.163.36
+
+    ;; Query time: 269 msec
+    ;; SERVER: 8.8.8.8#53(8.8.8.8) (UDP)
+    ;; WHEN: Sat Feb 12 18:26:26 CST 2022
+    ;; MSG SIZE  rcvd: 59
+    ```
+
+    ```shell
+    $ dig google.com +trace
+    $ dig @8.8.8.8 -p 5300 google.com
+    ```
 
 #### 旁路由的副作用(TCP三次握手的时候)
+
 在“家庭分流”的讨论中，非对称路由（非对 对称路由）的问题是旁路由设置中一个关键的挑战。这个问题的出现导致即使能够“翻墙”访问国外网站，也可能无法正常访问国内网站。
 
 以下是导致非对称路由问题的过程总结：
+
 ```mermaid
 sequenceDiagram
     participant Computer as 电脑(网关指向旁路由)
@@ -518,18 +591,20 @@ sequenceDiagram
     *   由于关键的连接确认数据包被旁路由丢弃，电脑与国内网站的TCP连接无法正常建立。
     *   这导致电脑无法正常访问那些不需要代理的国内网站，但却可能可以正常访问需要代理的国外网站。
 
-5. **解决方案（暂时性）**：
-    * 在旁路由的防火墙设置中，**取消勾选“丢弃无效数据包”**，可以解决由于非对称路由导致的国内网站无法访问的问题。
-    或
-    * 在旁路由的防火墙设置中，开启“IP动态伪装”（或称masquerade/NAT）功能
+5.  **解决方案（暂时性）**：
+    *   在旁路由的防火墙设置中，**取消勾选“丢弃无效数据包”**，可以解决由于非对称路由导致的国内网站无法访问的问题。
+        或
+    *   在旁路由的防火墙设置中，开启“IP动态伪装”（或称masquerade/NAT）功能
 
 **潜在影响和争议**：
 *   尽管取消勾选该选项可以解决即时问题，但非对称路由本身仍有可能导致“其他连接状态追踪问题”。
 *   这也是旁路由这种非标准网络拓扑结构存在争议的主要原因之一。
 
 #### wifi连接在旁路由下的问题
+
 在“家庭分流”的旁路由模式下，通过WiFi连接的设备确实可能遇到无法正常访问国内网站的问题 [对话历史]。您的问题“旁路由去了哪里”非常关键，因为它揭示了这种情况下流量处理的复杂性。
 根据来源，导致该问题的过程如下，并通过Mermaid序列图进行了总结：
+
 ```mermaid
 sequenceDiagram
     participant WiFiClient as WiFi设备 (如手机, 网关指向旁路由)
@@ -581,29 +656,31 @@ sequenceDiagram
 ```
 
 导致问题的过程总结：
-1. WiFi设备请求与主路由的初步处理：
-    * 当WiFi设备（其网关被设置为旁路由）尝试访问国内网站时，请求数据包会先到达主路由（作为WiFi接入点）。
-    * 主路由的WiFi流量会经过其操作系统内部的虚拟网桥处理，然后交给主路由的防火墙（iptables）。
-    * 主路由的iptables会记录下此连接的“五元组”信息，并判断流量目标在局域网内（或者流量将被转发到旁路由），因此在此时跳过对数据包进行NAT处理**。
-    * 主路由随后将数据包转发给旁路由。
-2. 旁路由的转发与主路由的再次处理：
-    * 旁路由收到数据包后，根据其分流规则判断这是一个国内IP，无需代理，因此会将其转发给它自己的网关，即主路由。
-    * 此时，数据包再次回到主路由。主路由的iptables再次检查此数据包时，会根据之前记录的五元组信息（在第一次处理时已决定跳过NAT），沿用“跳过NAT”的策略。
-    * 因此，主路由尝试将带有WiFi设备内网IP作为源IP的数据包直接转发到互联网。
-3. 数据包被互联网丢弃：
-    * 互联网上的路由器会丢弃任何带有私有IP地址作为源IP的数据包，导致连接失败。这是主要的访问问题。
+1.  WiFi设备请求与主路由的初步处理：
+    *   当WiFi设备（其网关被设置为旁路由）尝试访问国内网站时，请求数据包会先到达主路由（作为WiFi接入点）。
+    *   主路由的WiFi流量会经过其操作系统内部的虚拟网桥处理，然后交给主路由的防火墙（iptables）。
+    *   主路由的iptables会记录下此连接的“五元组”信息，并判断流量目标在局域网内（或者流量将被转发到旁路由），因此在此时跳过对数据包进行NAT处理**。
+    *   主路由随后将数据包转发给旁路由。
+2.  旁路由的转发与主路由的再次处理：
+    *   旁路由收到数据包后，根据其分流规则判断这是一个国内IP，无需代理，因此会将其转发给它自己的网关，即主路由。
+    *   此时，数据包再次回到主路由。主路由的iptables再次检查此数据包时，会根据之前记录的五元组信息（在第一次处理时已决定跳过NAT），沿用“跳过NAT”的策略。
+    *   因此，主路由尝试将带有WiFi设备内网IP作为源IP的数据包直接转发到互联网。
+3.  数据包被互联网丢弃：
+    *   互联网上的路由器会丢弃任何带有私有IP地址作为源IP的数据包，导致连接失败。这是主要的访问问题。
 4.  响应回传（非对称）与旁路由的误判：
-    * 目标服务器的响应数据包会直接返回主路由，主路由进行反向NAT（尽管去程未NAT）后直接转发给WiFi设备，从而绕过了旁路由。
-    * 当WiFi设备收到响应并发送连接确认数据包（如TCP ACK）时，该数据包会再次发送到其网关——旁路由。
-    * 旁路由会发现它记录了去程请求，但从未收到目标服务器的响应（因为响应直接返回给了WiFi设备）。因此，它会将这些确认数据包判定为**“无效数据包”**。
-    * 如果旁路由的防火墙设置中勾选了**“丢弃无效数据包”**，这些数据包就会被旁路由丢弃，导致TCP连接无法正常建立。
+    *   目标服务器的响应数据包会直接返回主路由，主路由进行反向NAT（尽管去程未NAT）后直接转发给WiFi设备，从而绕过了旁路由。
+    *   当WiFi设备收到响应并发送连接确认数据包（如TCP ACK）时，该数据包会再次发送到其网关——旁路由。
+    *   旁路由会发现它记录了去程请求，但从未收到目标服务器的响应（因为响应直接返回给了WiFi设备）。因此，它会将这些确认数据包判定为**“无效数据包”**。
+    *   如果旁路由的防火墙设置中勾选了**“丢弃无效数据包”**，这些数据包就会被旁路由丢弃，导致TCP连接无法正常建立。
+
 总结来说，旁路由在流量的去程中扮演了网关的角色，但在流量到达主路由时，主路由的连接追踪和iptables的默认行为是导致NAT被跳过的根本原因。即便旁路由转发了流量，主路由的后续处理仍旧导致了问题。同时，响应流量绕过旁路由，也可能导致旁路由将后续确认包识别为“无效”而丢弃。
 
-5. 解决方案：
-    * 在旁路由的防火墙设置中，开启“IP动态伪装”（或称masquerade/NAT）功能 [对话历史, 151]。
-    * 启用此功能后，旁路由在转发数据包到主路由之前，会强制将数据包的源IP替换为旁路由自己的内网IP（例如192.168.2.2）。这样，当数据包到达主路由时，它是一个“干净”的内网IP，主路由会对其进行正常的NAT处理并发送到互联网，从而解决WiFi连接下的国内网站访问问题
+5.  解决方案：
+    *   在旁路由的防火墙设置中，开启“IP动态伪装”（或称masquerade/NAT）功能 [对话历史, 151]。
+    *   启用此功能后，旁路由在转发数据包到主路由之前，会强制将数据包的源IP替换为旁路由自己的内网IP（例如192.168.2.2）。这样，当数据包到达主路由时，它是一个“干净”的内网IP，主路由会对其进行正常的NAT处理并发送到互联网，从而解决WiFi连接下的国内网站访问问题
 
 #### DDNS
+
 <img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" class="logo" width="120"/>
 
 #### 在openwrt的ddns服务下配置阿里云的ddns服务的全流程描述一下, 然后用mermaid的sequenceDiagram展示
@@ -616,20 +693,20 @@ sequenceDiagram
 
 ###### 步骤 1：阿里云准备
 
-1. **创建 AccessKey**
+1.  **创建 AccessKey**
     - 登录阿里云控制台 → 访问 RAM 访问控制 → 创建子用户（如 `ddns-user`）。
     - 为子用户授予 `AliyunDNSFullAccess` 权限。
     - 生成 AccessKey ID 和 Secret，保存备用。
-2. **添加域名解析记录**
+2.  **添加域名解析记录**
     - 进入阿里云域名解析控制台 → 为域名添加一条 A 记录（如 `home.example.com`），IP 可临时设为 `1.1.1.1`。
 
 ---
 
 ###### 步骤 2：OpenWrt 配置
 
-1. **安装动态 DNS 插件**
+1.  **安装动态 DNS 插件**
     - 登录 OpenWrt → 系统 → 软件包 → 搜索 `luci-app-ddns` 并安装。
-2. **配置 DDNS 服务**
+2.  **配置 DDNS 服务**
     - 进入 **服务 → 动态 DNS** → 删除默认配置 → 添加新配置。
     - 填写以下参数：
         - **服务提供商**：`aliyun.com`
@@ -637,22 +714,23 @@ sequenceDiagram
         - **域名**：`home@example.com`（格式：`主机名@主域名`）
         - **Access Key** 和 **Secret Key**：填写阿里云生成的密钥。
         - **接口**：选择 WAN 口（或通过 URL 获取公网 IP）。
-3. **保存并应用**
+3.  **保存并应用**
     - 勾选 **启用** → 点击 **保存 \& 应用** → 查看日志确认更新成功。
 
 ---
 
 ###### 步骤 3：验证配置
 
-1. **检查解析记录**
+1.  **检查解析记录**
     - 等待 5-10 分钟，在阿里云控制台查看域名解析 IP 是否更新为当前公网 IP。
-2. **测试访问**
+2.  **测试访问**
     - 使用 `ping home.example.com` 或浏览器访问域名，确认解析正确。
 
 ---
 
 ![alt text](ddns-password.jpg)
 ![alt text](ddns-source.jpg)
+
 如果是旁路由, source可以用url
 ![alt text](ddns-url.png)
 
@@ -675,7 +753,6 @@ sequenceDiagram
     用户->>阿里云控制台: 8. 验证域名解析IP是否更新
 ```
 
-
 ---
 
 ##### 关键参数说明
@@ -688,7 +765,6 @@ sequenceDiagram
 | Access Key | `LTAI5t******` | 阿里云生成的 Access Key ID |
 | Secret Key | `nqR3******` | 阿里云生成的 Secret Key |
 | 接口 | `wan` 或 URL 获取 | 选择 WAN 口或通过 URL 检测公网 IP |
-
 
 ---
 
@@ -703,87 +779,108 @@ sequenceDiagram
 <div style="text-align: center">⁂</div>
 
 [^1]: https://blog.csdn.net/pzhier/article/details/111570930
-
 [^2]: https://www.bilibili.com/video/BV1n741147yj/
-
 [^3]: https://www.youtube.com/watch?v=9GsG7SLE0tk
-
 [^4]: https://blog.csdn.net/gitblog_06542/article/details/143387501
-
 [^5]: https://cn.jwtechtips.top/archives/9
-
 [^6]: https://tnext.org/8466.html
-
 [^7]: https://cloud.tencent.com/developer/article/2465055
-
 [^8]: https://github.com/renndong/ddns-scripts-aliyun
-
 [^9]: [OpenWrt配置阿里云动态域名服务DDNS](https://blog.csdn.net/pzhier/article/details/111570930)
 
-
-
 #### config route
+
 ##### Settings of the bypass router
+
 ###### openclash
+
 ###### port mapping
+
 ## installation of PVE
+
 ### network diagram
+
 ### install PVE
+
 ### install openwrt vm
+
 ## airport
+
 ### buy
+
 ### setup server on cloud
+
 ## VPN
+
 ### tailscale
+
 ## application
+
 ### smb
+
 ### alist
+
 ### infuse
+
 ### torrent download
+
 ### 安装Tailscale
+
 在package中就可以安装
-1. 设置开机启动，验证开机启动
-```
-/etc/init.d/tailscale enable
-ls /etc/rc.d/S*tailscale*
-```
-2. 启动tailscale
-```
-/etc/init.d/tailscale start
-```
-3. 获取登录链接并配置路由
-```
-tailscale up
-```
+
+1.  设置开机启动，验证开机启动
+
+    ```
+    /etc/init.d/tailscale enable
+    ls /etc/rc.d/S*tailscale*
+    ```
+
+2.  启动tailscale
+
+    ```
+    /etc/init.d/tailscale start
+    ```
+
+3.  获取登录链接并配置路由
+
+    ```
+    tailscale up
+    ```
 
 ### install dig
+
 ```
 opkg update
 opkg install bind-dig
 ```
 
 ### 设置samba4
+
 [安装samba](https://doc.embedfire.com/openwrt/user_manal/zh/latest/User_Manual/openwrt/samba.html)
-1. 安装shadow-useradd
-```
-opkg update
-opkg install shadow-useradd
-```
 
-2. 添加用户
-```
-useradd quboqin
-```
+1.  安装shadow-useradd
 
-3. 设置该用户的samba password
-```
-smbpasswd -a quboqin
-```
+    ```
+    opkg update
+    opkg install shadow-useradd
+    ```
 
-4. 修改分享的目录owner
-```
-chown -R quboqin:quboqin /mnt/nas
-```
-![alt text](nas.png)
+2.  添加用户
 
+    ```
+    useradd quboqin
+    ```
 
+3.  设置该用户的samba password
+
+    ```
+    smbpasswd -a quboqin
+    ```
+
+4.  修改分享的目录owner
+
+    ```
+    chown -R quboqin:quboqin /mnt/nas
+    ```
+
+    ![alt text](nas.png)
