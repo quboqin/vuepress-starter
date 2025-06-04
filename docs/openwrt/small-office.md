@@ -240,6 +240,52 @@ OpenWrt 演进过程中主要版本及其差异可以梳理如下：
 
 https://github.com/quboqin/AutoBuildImmortalWrt
 
+这个项目不是对整个OpenWrt进行完整编译，而是使用OpenWrt ImageBuilder来构建镜像。
+
+##### 核心区别
+
+这个AutoBuildImmortalWrt项目使用的是**ImageBuilder**方式，而不是完整的源码编译：
+
+###### ImageBuilder方式（当前项目）
+- 使用预编译的Docker镜像 `immortalwrt/imagebuilder` [1](#0-0) 
+- 执行 `make image` 命令来构建固件镜像 [2](#0-1) 
+- 只需要指定包列表和配置文件，不需要编译源码
+
+###### 完整编译方式（传统方式）
+- 需要下载完整的OpenWrt源码
+- 执行 `make menuconfig` 配置
+- 执行 `make` 编译整个系统和所有包
+
+##### 具体实现
+
+在构建脚本中，你可以看到核心命令是：
+
+```bash
+make image PROFILE=$PROFILE PACKAGES="$PACKAGES" FILES="/home/build/immortalwrt/files"
+``` 
+
+这个命令的参数说明：
+- `PROFILE`: 目标设备型号
+- `PACKAGES`: 要包含的软件包列表 [4](#0-3) 
+- `FILES`: 自定义文件目录
+
+##### 优势
+
+ImageBuilder方式的优势：
+1. **速度快**: 不需要编译源码，只是打包预编译的包
+2. **资源消耗少**: GitHub Actions可以在几分钟内完成构建
+3. **稳定性高**: 使用官方预编译的包，减少编译错误
+
+所以你的观察是正确的 - 这里确实只是在构建镜像，而不是完整编译OpenWrt系统。
+
+##### Notes
+
+这种ImageBuilder方式在OpenWrt社区中很常见，特别适合需要快速定制固件但不需要修改底层代码的场景。项目通过Docker容器化的方式进一步简化了构建过程。
+
+Wiki pages you might want to explore:
+- [GitHub Actions Workflows (quboqin/AutoBuildImmortalWrt)](/wiki/quboqin/AutoBuildImmortalWrt#4.1)
+- [Build Scripts (quboqin/AutoBuildImmortalWrt)](/wiki/quboqin/AutoBuildImmortalWrt#4.3)
+
 #### build on wsl
 
 ### essential network concepts
