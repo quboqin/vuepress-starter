@@ -286,6 +286,30 @@ Wiki pages you might want to explore:
 - [GitHub Actions Workflows (quboqin/AutoBuildImmortalWrt)](/wiki/quboqin/AutoBuildImmortalWrt#4.1)
 - [Build Scripts (quboqin/AutoBuildImmortalWrt)](/wiki/quboqin/AutoBuildImmortalWrt#4.3)
 
+```mermaid
+sequenceDiagram
+    participant User
+    participant GitHub Actions
+    participant Docker Container
+
+    User->>GitHub Actions: Trigger workflow (workflow_dispatch)
+    GitHub Actions->>GitHub Actions: Checkout code (actions/checkout@v3)
+    GitHub Actions->>GitHub Actions: Set executable permissions (chmod +x rockchip/build.sh)
+    GitHub Actions->>GitHub Actions: Validate PPPoE Inputs
+    alt PPPoE Enabled AND (Account OR Password missing)
+        GitHub Actions->>GitHub Actions: Echo Error and Exit
+    end
+    GitHub Actions->>GitHub Actions: Start "Building Rockchip ImmortalWrt" step
+    loop For each profile
+        GitHub Actions->>Docker Container: Run image (immortalwrt/imagebuilder:rockchip-armv8-openwrt-24.10.1)
+        Note over Docker Container: Executes build.sh with PROFILE, ROOTFS_PARTSIZE, PPPoE env vars
+        Docker Container-->>GitHub Actions: Build completes
+    end
+    GitHub Actions->>GitHub Actions: Generate Firmware SHA-256
+    GitHub Actions->>GitHub Actions: Upload ImmortWrt as release assets (softprops/action-gh-release@v2.2.1)
+    GitHub Actions-->>User: Workflow complete / Release created
+```
+
 #### build on wsl
 
 ### essential network concepts
