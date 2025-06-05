@@ -54,7 +54,7 @@
 
 #### version
 
-OpenWrt 演进过程中主要版本及其差异可以梳理如下：
+- OpenWrt 演进过程中主要版本及其差异可以梳理如下：
 
 |    | 版本名称                 | 发布时间      | 主要特点与技术变化                                                                                                                               |
 |----|--------------------------|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -71,7 +71,7 @@ OpenWrt 演进过程中主要版本及其差异可以梳理如下：
 | 10 | OpenWrt 22.03            | 2022年        | 版本号 22.03.x，基于 nftables 的 Firewall4，更多设备支持，LuCI 界面新增暗黑模式，解决 2038 年问题。                                                                               |
 | 11 | OpenWrt 24.10            | 2025年        | 最新稳定版，内核升级至 6.6，支持 Wi-Fi 6 和初步 Wi-Fi 7，默认启用 TLS 1.3，支持 Multipath TCP，激活 POSIX 访问控制列表。                                                                 |
 
-主流版本的差异
+- 主流版本的差异
 
 |   | 固件/分支     | 上游版本跟进 | 内核版本 | 软件源类型   | 插件生态 | 在线定制 | 付费情况   | 适合用户         |
 |---|---------------|--------------|----------|--------------|----------|----------|------------|------------------|
@@ -109,18 +109,15 @@ OpenWrt 演进过程中主要版本及其差异可以梳理如下：
 
 1.  定制化
     1.  这是我添加的附加的软件包
-
         **luci-i18n-dockerman-zh-cn**没有包含在下面是因为默认编译的image size较小, 生成image后要做一次扩容, 然后在线安装
-
+        以下是要添加的基本的Plugin
         ```
         luci-app-argon-config luci-i18n-argon-config-zh-cn luci-i18n-passwall-zh-cn luci-app-openclash luci-i18n-homeproxy-zh-cn openssh-sftp-server luci-i18n-ddns-zh-cn luci-i18n-diskman-zh-cn luci-i18n-autoreboot-zh-cn luci-i18n-upnp-zh-cn luci-i18n-package-manager-zh-cn luci-i18n-firewall-zh-cn luci-i18n-samba4-zh-cn luci-i18n-ttyd-zh-cn bind-dig curl
         ```
-
-        添加软件包要检查对应版本的列表中是否包含
+        添加软件包要检查对应版本的列表中是否包含, 改成对应的版本
         [luci package](https://mirror.nju.edu.cn/immortalwrt/releases/24.10.1/packages/aarch64_generic/luci/)
 
-    2.  首次启动时运行的脚本（uci-defaults）
-
+    2.  首次启动时运行的脚本(uci-defaults), 这里先关闭了DHCP, 并指向网关
         ```bash
         # Beware! This script will be in /rom/etc/uci-defaults/ as part of the image.
         # Uncomment lines to apply:
@@ -177,17 +174,13 @@ OpenWrt 演进过程中主要版本及其差异可以梳理如下：
         ```
 
 2.  下载生成的image
-
     生成的image有两种格式
     - EXT4 不可以恢复出厂设置
     - Squashfs 支持Overlay分区, 可以恢复出厂设置
-
     **一般选择Squashfs**
 
 3.  image的扩容
-
     参考[openwrt基础配置 | openwrt固件选择、扩容、docker安装扩容、网络共享samba4安装配置](https://www.qichiyu.com/183.html)
-
     1.  确认是否具备所需依赖, 并上传镜像文件
 
         ```bash
@@ -195,7 +188,6 @@ OpenWrt 演进过程中主要版本及其差异可以梳理如下：
         which dd
         which parted
         ```
-
     2.  按顺序执行以下命令
 
         ```bash
@@ -217,17 +209,13 @@ OpenWrt 演进过程中主要版本及其差异可以梳理如下：
         # 退出分区工具
         quit
         ```
-
 4.  烧录image到SD卡上
-
     ![alt text](balena.png)
-
 5.  配置docker
     1.  创建docker的数据分区, 磁盘要在安装Docker前配置好
         创建分区并挂载 /opt/docker 下
-
     2.  安装和配置Docker
-        build的时候选会失败, 可能时image的size太小, 所以之前要扩容
+        build的时候选会失败, image的size太小, 所以之前要扩容
         ![alt text](install%20docker.png)
 
         安装这个package `luci-i18n-dockerman-zh-cn`
@@ -235,57 +223,53 @@ OpenWrt 演进过程中主要版本及其差异可以梳理如下：
         ```bash
         docker run hello-world
         ```
+6. side route的设置
+    1. 关闭主路由的DHCP
+    2. 旁路由的Gateway和DNS指向主路由
+    3. 开启旁路由的DHCP
+    4. 连接的设备要renew连接
+    5. 旁路由可以删除WAN/WAN6
+    6. 关闭ipv6
+        1. 在LAN的借口上禁用ipv6
+        ![alt text](disable-ipv6-lan.png)
+        2. 过滤 IPv6 AAAA 记录
+        ![alt text](disable-ipv6-aaaa.png)
+        3. WAN的上游DNS的设置
+        ![alt text](disable-ipv6-wan.jpg)
+        4. 全局的设置
+        ![alt text](全局的设置.png)
+        5. 光猫上也有一个下发的ipv6设置
 
 #### build with github action
-
 https://github.com/quboqin/AutoBuildImmortalWrt
-
 这个项目不是对整个OpenWrt进行完整编译，而是使用OpenWrt ImageBuilder来构建镜像。
-
 ##### 核心区别
-
 这个AutoBuildImmortalWrt项目使用的是**ImageBuilder**方式，而不是完整的源码编译：
-
 ###### ImageBuilder方式（当前项目）
 - 使用预编译的Docker镜像 `immortalwrt/imagebuilder` [1](#0-0) 
 - 执行 `make image` 命令来构建固件镜像 [2](#0-1) 
 - 只需要指定包列表和配置文件，不需要编译源码
-
 ###### 完整编译方式（传统方式）
 - 需要下载完整的OpenWrt源码
 - 执行 `make menuconfig` 配置
 - 执行 `make` 编译整个系统和所有包
-
 ##### 具体实现
-
 在构建脚本中，你可以看到核心命令是：
-
 ```bash
 make image PROFILE=$PROFILE PACKAGES="$PACKAGES" FILES="/home/build/immortalwrt/files"
 ``` 
-
 这个命令的参数说明：
 - `PROFILE`: 目标设备型号
 - `PACKAGES`: 要包含的软件包列表 [4](#0-3) 
 - `FILES`: 自定义文件目录
-
 ##### 优势
-
 ImageBuilder方式的优势：
 1. **速度快**: 不需要编译源码，只是打包预编译的包
 2. **资源消耗少**: GitHub Actions可以在几分钟内完成构建
 3. **稳定性高**: 使用官方预编译的包，减少编译错误
-
-所以你的观察是正确的 - 这里确实只是在构建镜像，而不是完整编译OpenWrt系统。
-
+只是在构建镜像，而不是完整编译OpenWrt系统。
 ##### Notes
-
 这种ImageBuilder方式在OpenWrt社区中很常见，特别适合需要快速定制固件但不需要修改底层代码的场景。项目通过Docker容器化的方式进一步简化了构建过程。
-
-Wiki pages you might want to explore:
-- [GitHub Actions Workflows (quboqin/AutoBuildImmortalWrt)](/wiki/quboqin/AutoBuildImmortalWrt#4.1)
-- [Build Scripts (quboqin/AutoBuildImmortalWrt)](/wiki/quboqin/AutoBuildImmortalWrt#4.3)
-
 ```mermaid
 sequenceDiagram
     participant User
@@ -313,24 +297,6 @@ sequenceDiagram
 #### build on wsl
 
 ### essential network concepts
-
-#### side route的设置
-
-1. 关闭主路由的DHCP
-2. 旁路由的Gateway和DNS指向主路由
-3. 开启旁路由的DHCP
-4. 连接的设备要renew连接
-5. 旁路由可以删除WAN/WAN6
-6. 关闭ipv6
-    1. 在LAN的借口上禁用ipv6
-       ![alt text](disable-ipv6-lan.png)
-    2. 过滤 IPv6 AAAA 记录
-       ![alt text](disable-ipv6-aaaa.png)
-    3. WAN的上游DNS的设置
-       ![alt text](disable-ipv6-wan.jpg)
-    4. 全局的设置
-       ![alt text](全局的设置.png)
-    5. 光猫上也有一个下发的ipv6设置
 
 #### firewall
 
@@ -418,10 +384,7 @@ sequenceDiagram
 - DNS spoofing/cache poisoning attacks possible
 - DNSSEC (DNS Security Extensions) provides authentication
 
-#### DNS解析的拓扑图和流程图
-
-##### 拓扑图
-
+##### DNS解析的拓扑图和流程图
 ![openwrt-Page-4.drawio](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesopenwrt-Page-4.drawio.png)
 
 1. passwall 依赖 dnsmasq 和 pdnsd 两个模块
@@ -449,7 +412,7 @@ nameserver 114.114.115.115
 而如果没有勾选，你可以指定 DNS
 ![r4s-network-interface-wan](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesr4s-network-interface-wan.png)
 
-##### 流程图
+###### 流程图
 
 整个网络请求分三步
 1. 获取 DNS 服务器的 IP 地址
@@ -750,11 +713,6 @@ sequenceDiagram
     *   启用此功能后，旁路由在转发数据包到主路由之前，会强制将数据包的源IP替换为旁路由自己的内网IP（例如192.168.2.2）。这样，当数据包到达主路由时，它是一个“干净”的内网IP，主路由会对其进行正常的NAT处理并发送到互联网，从而解决WiFi连接下的国内网站访问问题
 
 #### DDNS
-
-<img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" class="logo" width="120"/>
-
-#### 在openwrt的ddns服务下配置阿里云的ddns服务的全流程描述一下, 然后用mermaid的sequenceDiagram展示
-
 以下是 OpenWrt 配置阿里云 DDNS 服务的全流程说明，并附上 Mermaid 的 `sequenceDiagram` 交互图。
 
 ---
@@ -845,22 +803,6 @@ sequenceDiagram
 - **日志查看**：在 OpenWrt 的 DDNS 界面点击 **日志查看器** 排查具体错误。
 
 通过以上步骤，即可实现 OpenWrt 路由器的公网 IP 动态绑定到阿里云域名。
-
-<div style="text-align: center">⁂</div>
-
-[^1]: https://blog.csdn.net/pzhier/article/details/111570930
-[^2]: https://www.bilibili.com/video/BV1n741147yj/
-[^3]: https://www.youtube.com/watch?v=9GsG7SLE0tk
-[^4]: https://blog.csdn.net/gitblog_06542/article/details/143387501
-[^5]: https://cn.jwtechtips.top/archives/9
-[^6]: https://tnext.org/8466.html
-[^7]: https://cloud.tencent.com/developer/article/2465055
-[^8]: https://github.com/renndong/ddns-scripts-aliyun
-[^9]: [OpenWrt配置阿里云动态域名服务DDNS](https://blog.csdn.net/pzhier/article/details/111570930)
-
-#### config route
-
-##### Settings of the bypass router
 
 ###### openclash
 
