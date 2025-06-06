@@ -3,10 +3,9 @@
 ## topology of my network
 
 ### main route mode
-
+![alt text](<openwrt-main route.drawio.png>)
 ### side route mode
-
-![alt text](openwrt-side-route.drawio.png)
+![alt text](<openwrt-side route.drawio.png>)
 
 ## soft route
 
