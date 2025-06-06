@@ -837,27 +837,154 @@ sequenceDiagram
 ### torrent download
 
 ### 安装Tailscale
+路由器上设置Tailscale是一个非常强大且实用的操作。这能让您的路由器成为整个家庭/办公室网络的“瑞士军刀”，实现安全远程访问内网（子网路由）和作为流量出口（出口节点）两大核心功能。
 
-在package中就可以安装
+以下是在路由器上设置Tailscale的详细步骤，主要以最常见、最灵活的**OpenWrt**系统为例。
 
-1.  设置开机启动，验证开机启动
+#### Tailscale在路由器上的两大核心用途
 
+1.  **子网路由器 (Subnet Router)**：让您在外的设备（手机、笔记本电脑）通过Tailscale安全地访问整个家庭局域网。就像您在家一样，可以直接访问NAS、打印机、智能家居设备等所有内网设备，而无需为每个设备都安装Tailscale。
+2.  **出口节点 (Exit Node)**：让您在外的设备将所有互联网流量都通过家里的路由器转发。这样，无论您身在何处（例如使用公共Wi-Fi），您的网络流量看起来都像是从家里发出的，极大地提高了安全性，并且可以访问家里的网络资源或有地区限制的服务。
+
+-----
+
+#### 前提条件
+
+1.  **一台兼容的路由器**：您需要一台可以安装Tailscale的路由器。这通常意味着：
+      * 运行**OpenWrt**、LEDE等开源固件的路由器。
+      * GL.iNet系列路由器（其固件基于OpenWrt，通常预装或易于安装）。
+      * 运行pfSense、OPNsense的软路由。
+      * **注意**：绝大多数普通家用路由器（如TP-Link, Netgear, ASUS等）的原厂固件**不支持**直接安装Tailscale。本指南以OpenWrt为例。
+2.  **一个Tailscale账号**：您可以在[Tailscale官网](https://login.tailscale.com/)使用Google、Microsoft、GitHub等账号免费注册。
+3.  **SSH访问权限**：您需要能够通过SSH登录到您的路由器后台。
+
+-----
+
+#### 第一步：在OpenWrt上安装Tailscale
+
+1.  使用SSH工具（如PuTTY, Termius, 或系统自带的终端）登录到您的OpenWrt路由器。`your_router_ip`通常是`192.168.123.1`或您自定义的地址。
+
+    ```bash
+    ssh root@192.168.123.1
     ```
-    /etc/init.d/tailscale enable
-    ls /etc/rc.d/S*tailscale*
+
+2.  更新软件包列表，确保能找到最新的Tailscale包。
+
+    ```bash
+    opkg update
     ```
 
-2.  启动tailscale
+3.  安装Tailscale软件包。
 
-    ```
-    /etc/init.d/tailscale start
+    ```bash
+    opkg install tailscale
     ```
 
-3.  获取登录链接并配置路由
+-----
 
-    ```
+#### 第二步：首次登录与认证
+
+1.  安装完成后，执行以下命令来启动Tailscale并将其连接到您的账号。
+
+    ```bash
     tailscale up
     ```
+
+2.  执行后，终端会输出一段信息，其中包含一个**认证链接**，看起来像这样：
+
+    ```
+    To authenticate, visit:
+
+        https://login.tailscale.com/a/xxxxxxxxxxxx
+    ```
+
+3.  在您的**任何一台设备**（电脑、手机）的浏览器中打开这个链接，登录您的Tailscale账号，然后授权这台新的“路由器”设备加入您的私有网络。
+
+4.  授权成功后，回到SSH终端，您应该会看到成功连接的提示。您可以在路由器上执行以下命令来验证状态，它会列出您网络中的其他设备。
+
+    ```bash
+    tailscale status
+    ```
+
+    同时，登录Tailscale官网的管理后台，您应该能在设备列表（Machines）中看到您的路由器。
+
+-----
+
+#### 第三步：配置核心功能 (子网路由 / 出口节点)
+
+现在，您的路由器已经成为Tailscale网络中的一个普通节点了。接下来，我们要赋予它“路由器”的特殊能力。
+
+##### 场景一：配置为子网路由器 (Subnet Router)
+
+假设您的家庭局域网网段是 `192.168.123.0/24`。执行以下命令，让路由器“宣告”它可以路由这个网段：
+
+```bash
+# 将 192.168.123.0/24 替换为您自己的局域网网段
+tailscale up --advertise-routes=192.168.123.0/24
+```
+
+如果您同时使用IPv6，可以一并宣告：
+
+```bash
+tailscale up --advertise-routes=192.168.123.0/24,fdxx:xxxx:xxxx::/64
+```
+
+**极其重要的一步**：
+
+1.  回到**Tailscale官网的管理后台**。
+2.  在设备列表（Machines）中找到您的路由器，点击右侧的 `...` 菜单，选择 **"Edit route settings..."**。
+3.  在弹出的侧边栏中，**勾选并批准**您刚刚宣告的子网路由（`192.168.123.0/24`）。
+4.  完成这一步后，您的其他Tailscale设备就能通过路由器的Tailscale IP访问到`192.168.123.x`的任何设备了。
+
+##### 场景二：配置为出口节点 (Exit Node)
+
+如果您想把路由器作为流量出口，执行以下命令：
+
+```bash
+tailscale up --advertise-exit-node
+```
+
+**同样，必须在管理后台批准**：
+
+1.  回到**Tailscale官网的管理后台**。
+2.  找到您的路由器，点击 `...` 菜单，选择 **"Edit route settings..."**。
+3.  在侧边栏中，**打开 "Use as exit node"** 的开关。
+
+**如何使用出口节点**：
+在您需要使用此功能的客户端设备上（如手机、笔记本电脑），打开Tailscale应用，找到“Use exit node...”选项，然后选择您的路由器作为出口节点。之后，该设备的所有流量都会经由您家中的路由器转发。
+
+> **提示**：您可以同时宣告子网路由和出口节点，只需将参数组合即可：
+> `tailscale up --advertise-routes=192.168.1.0/24 --advertise-exit-node`
+
+-----
+
+#### 第四步：设置开机自启
+
+为了确保路由器重启后Tailscale服务能自动运行，执行以下命令：
+
+```bash
+/etc/init.d/tailscale enable
+/etc/init.d/tailscale start
+```
+
+这会将Tailscale服务添加到OpenWrt的启动项中。
+
+-----
+
+#### 第五步：防火墙配置 (非常重要)
+
+为了让Tailscale的流量能与您的局域网互通，需要正确配置OpenWrt的防火墙。
+
+1.  登录OpenWrt的**LuCI网页管理界面**（通常是`http://192.168.123.1`）。
+2.  导航到 **网络 (Network) -\> 防火墙 (Firewall)**。
+3.  在 **区域 (Zones)** 设置中，找到 `lan` 区域（或者您自定义的局域网区域），点击“修改 (Edit)”。
+4.  在 **“覆盖的网络 (Covered networks)”** 列表中，点击“添加”，然后选择 `tailscale0` 这个接口。
+5.  在 **“允许转发到目标区域 (Allow forward to destination zones)”** 中，确保 `lan` 自身被勾选（即`lan` -\> `lan` 的转发是允许的）。
+6.  点击“保存并应用 (Save & Apply)”。
+
+这个设置的目的是告诉防火墙，`tailscale0` 接口（Tailscale虚拟网卡）和 `lan` 区域（您的物理局域网）是互相信任的，允许它们之间自由通信。
+
+完成以上所有步骤后，您的路由器就成功变身为一台功能强大的Tailscale网络枢纽了。
 
 ### install dig
 
