@@ -812,7 +812,7 @@ sequenceDiagram
 ### network diagram
 
 ### install PVE
-
+[Proxmox VE的安装](<Proxmox VE 8优化定制.md>)
 ### install openwrt vm
 
 ## airport
