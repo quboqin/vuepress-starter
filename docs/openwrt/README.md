@@ -1,180 +1,286 @@
-# 科学上网
-## 解决的问题
-1. 科学上网
-2. 1000M高速访问互联网
-3. 1000M高速内网互联
-4. 搭建私有云盘，建立家庭多媒体和文件中心，并和公有云同步
-5. 外网穿透，访问内网私有云，远程访问内网设备和PC/MAC/Linux终端
-## 网络拓扑
-### 外网
-![openwrt-外网.drawio](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesopenwrt-%E5%A4%96%E7%BD%91.drawio.png)
-### 内网
-![openwrt-内网.drawio](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesopenwrt-%E5%86%85%E7%BD%91.drawio.png)
-## 路由器固件
-### 固件后缀的含义，分区类型和固件类型
-在下载 openwrt 系统时，经常能看到 initramfs-kernel.bin，squashfs-factory.bin，squashfs-sysupgrade.bin 等结尾的文件，factory 适用于从原厂系统刷到 openwrt，sysupgrade 则是从 openwrt 刷到 openwrt（已经是 openwrt 系统，在 openwrt 系统中更新自己），squashfs 则是一种文件系统，适用于嵌入式设备。那么 initramfs-kernel 又是什么呢。initramfs 是放在内存 RAM 中的 rootfs 映像文件，跟 kernel 放在一起。一般来说用不到 initramfs-kernel.bin 来刷机，因为启动后，所有的配置在路由器重启后都不能保留（毕竟 ram 文件系统，所有文件放在 ram 中，断电就没了）。但也有用到 initramfs-kernel.bin 的时候，就是在移植 openwrt 系统的时候，没有设备上的 flash 闪存的驱动的时候。
+# OpenWRT 完整指南
 
-文件格式区别
-- 固件文件名中带有ext4 字样的文件为搭载 ext4 文件系统固件，ext4 格式的固件更适合熟悉 Linux 系统的用户使
-用，在Linux 下可以比较方便地调整ext4 分区的大小
-- 固件文件名中带有 squashfs 字样的文件为搭载squashfs 文件系统固件，而squashfs 格式的固件适用于“不折腾
-的用户，其优点是可以比较方便地进行系统还原，哪怕你一不小心玩坏固件，只要还能进入控制面板或 SSH，就可
-以很方便地进行 “系统还原操作"
-- 固件文件名中带有sysupgrade 字样的文件为升级Openwrt 所用的固件，无需解压 gz 文件，可直接在 Luci 面板中
-升级。（目前源码有问题，不推荐用）
-- 固件文件名中带有 factory 字样的文件为全新安装 Openwrt 所用的固件，推荐在全新安装 Openwrt 时解压 gz 文件
-刷入 SD 卡或硬盘
-- bin/img/gz？
+## 概述
 
-### 安装
-#### R4S
-##### 固件下载
-[R4S第三方固件](https://bigdongdong.gitbook.io/nanopi-r2s/r4sotherfirmware)
-###### 固件基本信息
-- 管理地址: 192.168.8.1
-- 账号密码: root / 无
-- Passwall/Hello World/OpenClash
-- UU游戏加速器
-- DDNS
-- iperf3 测速
-###### 固件安装
-Windows下写盘工具下载 rufus 写盘工具 (苹果电脑下载mac专用的）
+OpenWRT 是基于 Linux 的开源路由器固件系统，具有强大的扩展性和定制能力。本指南提供了从基础安装到高级应用的全面文档，帮助您构建稳定、高效、功能丰富的网络环境。
 
-#### Newifi 3(新路由3)
-##### 固件下载
-###### 资源的地址
-[恩山论坛 - 【2022.5.3 更新】新路由3/小娱 Lean源码 支持一键更新固件(https://www.right.com.cn/forum/thread-4047888-1-1.html)
-###### 固件基本信息
-- 管理地址: 192.168.1.1
-- 账号密码: root / password
-- SSR Plus
-- 阿里云盘 Webdav
-- Aria2
-- DDNS
-- iperf3 测速
+## 快速导航
 
-###### 固件安装
-![20220514142449](https://raw.githubusercontent.com/quboqin/images/main/blogs/pictures20220514142449.png)
-1. 重置 Breed
-   按住 Reset 不放，将电源再次连接，等待 10s 后，松开 Reset，路由器进入 Breed 模式, 接笔记本或PC的有线网络(无线网络仍然可以上网，有线网口不需要设置为静态IP)
-2. 在浏览器中访问 192.168.1.1，刷入 Openwrt 固件
-3. 等待重启(时间较长)，输入新的IP地址(固件默认的IP地址)，登入OpenWrt后台
-4. 进入“网络->接口->LAN”，修改IP地址为静态地址（这里是192.168.123.6），网关和DNS（这里先指向现路由器192.168.123.4），关闭DHCP和IPV6，保存后，网线接入使用中的路由器，进行下一步配置
-![Screen Shot 2022-05-14 at 14.30.06](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2014.30.06.png)
-![Screen Shot 2022-05-14 at 14.36.09](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2014.36.09.png)
-##### 固件配置(Pre)
-1. 配置网络->接口
-- 检查LAN接口的“物理设置”和“防火墙设置”
-- 配置WAN接口
-   - 设置 PPPOE 的拨号账号
-![Screen Shot 2022-05-14 at 14.50.34](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2014.50.34.png)
-   - 关闭 ‘使用对端通告的 DNS 服务器’
-   - 添加 ‘使用自定义的 DNS 服务器’
-![Screen Shot 2022-05-14 at 14.47.41](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2014.47.41.png)
-- 检查LAN接口的“物理设置”和“防火墙设置”
-- 如果要访问光猫添加一个WAN0的接口，复用WAN的物理接口
-![Screen Shot 2022-05-14 at 14.53.28](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2014.53.28.png)
-2. 关闭 Turbo ACC 中的 DNS 缓存
-![Screen Shot 2022-05-14 at 14.58.43](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2014.58.43.png)
-3. 检查防火墙的设置
-在“网络->防火墙->自定义规则”中，开启
+### 🔧 硬件平台
+- [NanoPi R4S 安装配置](hardware/r4s.md) - ARM64 高性能路由器
+- [新路由3(Newifi3) 配置](hardware/newifi3.md) - 入门级路由器刷机
+- [x86 平台部署](hardware/x86.md) - 软路由和虚拟化部署
+- [Proxmox VE 虚拟化](hardware/pve.md) - 虚拟化环境优化
+
+### 🌐 网络配置
+- [DNS 配置完全指南](network/dns.md) - DNS 分流与优化
+- [网络拓扑设计](network/topology.md) - 架构规划与设计
+
+### 🏗️ 固件编译
+- [固件类型与选择](build/firmware.md) - 固件格式详解
+- [本地编译指南](build/compilation.md) - 源码编译配置
+- [GitHub Actions 自动编译](build/github-action.md) - CI/CD 自动化
+
+### 📱 应用服务
+- [代理服务配置](applications/proxy.md) - 科学上网解决方案
+- [系统服务管理](applications/services.md) - 文件共享、下载、媒体服务
+
+## 功能特性
+
+### 核心功能
+- ✅ **多协议支持** - V2Ray、Xray、Trojan、Shadowsocks 等
+- ✅ **智能分流** - 基于规则的流量分流
+- ✅ **DNS 优化** - 防污染、分流解析、缓存优化
+- ✅ **网络加速** - BBR、Turbo ACC、硬件卸载
+- ✅ **设备管理** - DHCP、静态路由、访问控制
+
+### 高级特性
+- 🚀 **虚拟化支持** - Docker、LXC 容器部署
+- 🚀 **存储服务** - Samba、WebDAV、FTP 文件共享
+- 🚀 **下载工具** - Aria2、qBittorrent 下载中心
+- 🚀 **媒体服务** - DLNA、Jellyfin 流媒体服务器
+- 🚀 **监控运维** - 系统监控、日志分析、自动化维护
+
+## 使用场景
+
+### 家庭网络中心
 ```
-iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53
-iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 53
-[ -n "$(command -v ip6tables)" ] && ip6tables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53
-[ -n "$(command -v ip6tables)" ] && ip6tables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 53
+功能需求：
+✓ 全屋科学上网
+✓ NAS 文件存储
+✓ 影音娱乐中心
+✓ 智能家居网关
+✓ 游戏加速优化
+
+推荐配置：
+- 硬件: NanoPi R4S / x86 软路由
+- 存储: 1TB+ SSD/HDD
+- 网络: 千兆有线 + WiFi 6
 ```
-4. 修改登录密码，添加 SSH Key
-5. 配置梯子客户端
-- passwall
-- ssr plus
-6. 启动 NTP 客户端
-##### 固件配置(Pro)
-1. 配置“网络->接口->LAN”
-- 开启 DHCP
-![Screen Shot 2022-05-14 at 15.07.31](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2015.07.31.png)
-- 删除网关和 DNS
-![Screen Shot 2022-05-14 at 15.07.17](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2015.07.17.png)
-2. DHCP 中添加静态路由
-![Screen Shot 2022-05-14 at 15.09.51](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2015.09.51.png)
-3. 配置 DDNS
-- 阿里云
-![Screen Shot 2022-05-14 at 15.11.31](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2015.11.31.png)
-** 要在高级设置里修正来源，如果之前在局域网里作为副路由设置过 **
-![Screen Shot 2022-05-14 at 16.16.16](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2016.16.16.png)
-- DDNS.to(备选)
-![Screen Shot 2022-05-14 at 15.13.49](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2015.13.49.png)
-要修改 ddnsto 站点上的域名映射配置
-4. 设置阿里云盘 webdav 服务本地映射，在浏览器获取 refresh token
-![Screen Shot 2022-05-14 at 15.31.22](https://raw.githubusercontent.com/quboqin/images/main/blogs/picturesScreen%20Shot%202022-05-14%20at%2015.31.22.png)
-5. 导入端口映射表
+
+### 小型办公网络
 ```
-scp root@192.168.123.6:/etc/config/firewall ~/Desktop/firewall
+功能需求：
+✓ 企业级安全防护
+✓ VLAN 网络隔离
+✓ VPN 远程接入
+✓ 网络行为管控
+✓ 高可用负载均衡
+
+推荐配置：
+- 硬件: x86 工控机 / 企业级路由
+- 存储: RAID 冗余存储
+- 网络: 多WAN 负载均衡
 ```
-从firewall-rediect添加分几类
-- nas(24xx)
-   - smb
-   - webdav
-   - portal
-   - ssh
-- x86 openwrt(20xx)
-   - portal
-   - ssh
-- arm openwrt(22xx)
-   - portal
-   - ssh
-- mips openwrt(25xx)
-   - portal
-   - ssh
-- aria2
-   - backend(16800, 19720710)
-   - aria2ng(10000, portal)
-- aliyun-webdav
+
+### 技术学习环境
 ```
-scp ~/Desktop/firewall root@192.168.123.6:/etc/config/firewall
+功能需求：
+✓ 虚拟化实验平台
+✓ 容器化应用部署
+✓ 网络技术验证
+✓ 开源项目测试
+✓ 编程开发环境
+
+推荐配置：
+- 硬件: 高配置 x86 主机
+- 存储: 大容量 NVMe SSD
+- 网络: 多网卡bond
 ```
-6. 在梯子中添加 VPS
-7. 配置 UU 游戏加速器，是否要关闭其他路由器的UU加速器，解绑并重新绑定
 
-#### X86 平台安装
-##### PVE 安装
-1. 安装PVE(Proxmox)
-    1. 下载pve iso镜像，官方下载地址：https://pve.proxmox.com/wiki/Downloads
-    2. hdiutil convert -format UDRW  -o promos-ve_*.dmg promos-ve_*.iso
-    3. diskutil list
-    4. diskutil unmountDisk /dev/diskX
-    5. sudo dd if=promos-ve_*.dmg of=/dev/rdiskX bs=1m
+## 硬件推荐
 
-https://pve.proxmox.com/wiki/Prepare_Installation_Media
+### 入门级方案 (500-1000元)
+| 设备 | 价格 | CPU | 内存 | 适用场景 |
+|------|------|-----|------|----------|
+| **新路由3** | ~200元 | MT7621A 双核 | 512MB | 轻量使用，学习入门 |
+| **小娱C5** | ~300元 | MT7621A 双核 | 256MB | 简单家庭网络 |
+| **NanoPi R2S** | ~400元 | RK3328 四核 | 1GB | 中等负载，性价比高 |
 
-2. 优化
-Intel CPU
-shell里面输入命令：
-nano /etc/default/grub
-在里面找到：
-GRUB_CMDLINE_LINUX_DEFAULT="quiet"
-然后修改为
-GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on"
-在更新一下
-update-grub
+### 进阶级方案 (1000-3000元)
+| 设备 | 价格 | CPU | 内存 | 适用场景 |
+|------|------|-----|------|----------|
+| **NanoPi R4S** | ~800元 | RK3399 六核 | 4GB | 高性能路由，推荐 ⭐ |
+| **NanoPi R5S** | ~1200元 | RK3568 四核 | 4GB | 最新架构，双2.5G网口 |
+| **x86 软路由** | 1500-3000元 | Intel N5105/J4125 | 8GB | 极致性能，企业级 |
 
-https://www.youtube.com/watch?v=m5wrXoDLNNY&t=755s
-https://www.vediotalk.com/archives/45932
+### 专业级方案 (3000元+)
+| 设备 | 价格 | CPU | 内存 | 适用场景 |
+|------|------|-----|------|----------|
+| **工控主机** | 3000-5000元 | Intel i5/i7 | 16GB+ | 大型网络，虚拟化 |
+| **企业路由器** | 5000元+ | 专用处理器 | 定制 | 商业环境，高可靠性 |
 
-3. 安装 OpenWrt
-qm importdisk 100 /var/lib/vz/template/iso/openwrt-x86-64-generic-squashfs-combined.img local-lvm
+## 软件生态
 
-##### 固件下载
-[【2022-5-14】每日更新 高大全/精简版 Openwrt x86 5.15内核 软路由固件 (提供定制)](https://www.right.com.cn/forum/thread-7048868-1-1.html)
-###### 固件基本信息
-- 管理地址: 192.168.1.1
-- 账号密码: root / password
-- Passwall/Hello World/OpenClash
-- UU游戏加速器
-- DDNS
-- iperf3 测速
-###### 固件安装
+### 主流固件分支
 
-## 梯子
-## 存储方案
-## 测速
+| 固件 | 维护者 | 更新频率 | 特色功能 | 推荐指数 |
+|------|--------|----------|----------|----------|
+| **ImmortalWrt** | 社区 | 频繁 | 官方跟进快，设备支持多 | ⭐⭐⭐⭐⭐ |
+| **Lean LEDE** | coolsnowwolf | 定期 | 插件丰富，稳定性好 | ⭐⭐⭐⭐ |
+| **Lienol** | Lienol | 定期 | 轻量化，资源占用少 | ⭐⭐⭐ |
+| **OpenWrt 官方** | OpenWrt 团队 | 定期 | 原生体验，长期支持 | ⭐⭐⭐⭐ |
+
+### 核心插件生态
+
+#### 网络代理
+- **Passwall** - 多协议支持，配置简单
+- **SSR Plus** - 老牌插件，生态完善
+- **OpenClash** - Clash 核心，规则丰富
+- **Hello World** - 界面美观，功能全面
+
+#### 系统服务
+- **Samba4** - 文件共享服务
+- **Aria2** - 多协议下载器
+- **Docker** - 容器化平台
+- **DDNS** - 动态域名解析
+
+#### 网络工具
+- **SmartDNS** - 智能 DNS 解析
+- **AdGuard Home** - 广告屏蔽
+- **UPnP** - 即插即用协议
+- **Wake on LAN** - 网络唤醒
+
+## 最佳实践
+
+### 安全配置
+```bash
+# 1. 修改默认密码
+passwd root
+
+# 2. 禁用 root SSH 密码登录
+echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+echo "PasswordAuthentication no" >> /etc/ssh/sshd_config
+
+# 3. 配置防火墙规则
+iptables -A INPUT -s 192.168.0.0/16 -j ACCEPT
+iptables -A INPUT -j DROP
+
+# 4. 启用自动更新
+echo "0 2 * * 0 opkg update && opkg upgrade" >> /etc/crontabs/root
+```
+
+### 性能优化
+```bash
+# 1. 内核参数优化
+echo 'net.core.netdev_max_backlog = 5000' >> /etc/sysctl.conf
+echo 'net.netfilter.nf_conntrack_max = 65536' >> /etc/sysctl.conf
+
+# 2. 启用 BBR 拥塞控制
+echo 'net.ipv4.tcp_congestion_control = bbr' >> /etc/sysctl.conf
+
+# 3. 优化存储性能
+echo 'vm.dirty_ratio = 15' >> /etc/sysctl.conf
+echo 'vm.dirty_background_ratio = 5' >> /etc/sysctl.conf
+
+# 应用优化
+sysctl -p
+```
+
+### 备份策略
+```bash
+# 自动配置备份脚本
+#!/bin/sh
+BACKUP_DIR="/mnt/shared/backups"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+# 创建备份
+sysupgrade -b $BACKUP_DIR/config_backup_$DATE.tar.gz
+
+# 清理旧备份（保留最近7天）
+find $BACKUP_DIR -name "config_backup_*.tar.gz" -mtime +7 -delete
+
+# 添加到定时任务
+echo "0 3 * * * /usr/bin/backup_config.sh" >> /etc/crontabs/root
+```
+
+## 常见问题
+
+### ❓ 如何选择合适的硬件平台？
+- **新手用户**: 推荐 NanoPi R4S，性能够用，社区支持好
+- **高级用户**: 选择 x86 平台，扩展性强，支持虚拟化
+- **商用环境**: 使用企业级设备，注重稳定性和技术支持
+
+### ❓ 固件刷坏了怎么办？
+- **救援模式**: 大多数设备支持 Breed、U-Boot 等救援模式
+- **TTL 刷机**: 通过串口连接进行底层刷机
+- **硬件恢复**: 短接闪存芯片强制进入刷机模式
+
+### ❓ 如何实现稳定的代理服务？
+- **多节点配置**: 配置多个代理节点，实现负载均衡
+- **智能切换**: 启用节点健康检查和自动切换
+- **DNS 优化**: 正确配置 DNS 分流，防止污染
+
+### ❓ 网络性能如何优化？
+- **硬件加速**: 启用 Turbo ACC、硬件 NAT 等加速功能
+- **QoS 配置**: 合理配置流量控制和优先级
+- **系统调优**: 优化内核参数和网络栈配置
+
+## 技术支持
+
+### 官方资源
+- [OpenWrt 官方网站](https://openwrt.org/)
+- [OpenWrt 官方文档](https://openwrt.org/docs/start)
+- [设备兼容性列表](https://openwrt.org/toh/start)
+
+### 社区资源
+- [恩山无线论坛](https://www.right.com.cn/forum/) - 中文最大的 OpenWrt 社区
+- [GitHub OpenWrt 项目](https://github.com/openwrt/openwrt)
+- [Telegram 讨论群组](https://t.me/openwrt_zh)
+
+### 学习资源
+- [OpenWrt 开发者指南](https://openwrt.org/docs/guide-developer/start)
+- [Linux 网络编程](https://www.kernel.org/doc/Documentation/networking/)
+- [路由器原理解析](https://en.wikipedia.org/wiki/Router_(computing))
+
+## 贡献指南
+
+本文档是开源项目，欢迎大家参与完善：
+
+1. **内容完善** - 补充缺失的配置说明
+2. **错误修正** - 修复文档中的技术错误
+3. **案例分享** - 分享实际使用经验
+4. **翻译工作** - 帮助翻译英文文档
+
+### 如何贡献
+```bash
+# 1. Fork 项目到自己的账号
+git clone https://github.com/your-username/vuepress-starter.git
+
+# 2. 创建功能分支
+git checkout -b feature/improve-openwrt-docs
+
+# 3. 提交改动
+git add .
+git commit -m "improve: 完善 OpenWRT DNS 配置说明"
+
+# 4. 推送到远程仓库
+git push origin feature/improve-openwrt-docs
+
+# 5. 创建 Pull Request
+```
+
+## 更新日志
+
+### v2.0.0 (2024-09-16)
+- 🎉 完全重构文档结构
+- ✨ 新增硬件平台专门指南
+- ✨ 整合 DNS 配置完整解决方案
+- ✨ 添加网络拓扑设计指南
+- 🔧 优化图片资源管理
+- 📖 补充最佳实践和故障排除
+
+### v1.x.x (历史版本)
+- 基础功能文档
+- 单文件组织结构
+- 基本配置说明
+
+---
+
+<div align="center">
+
+**🌟 如果这个指南对您有帮助，请给项目一个 Star！**
+
+[⬆️ 回到顶部](#openwrt-完整指南)
+
+</div>
