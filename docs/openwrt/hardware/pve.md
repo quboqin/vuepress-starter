@@ -271,3 +271,19 @@ uname -r
 ```
 
 完成以上所有步骤后，您的PVE 8.4服务器就已经完成了基础的优化配置，可以开始创建和管理虚拟机了。
+
+** detect network ports
+```bash
+ethtool enp1s0
+
+	Auto-negotiation: on
+	Port: Twisted Pair
+	PHYAD: 0
+	Transceiver: internal
+	MDI-X: off (auto)
+	Supports Wake-on: pumbg
+	Wake-on: g
+        Current message level: 0x00000007 (7)
+                               drv probe link
+	Link detected: no
+```
