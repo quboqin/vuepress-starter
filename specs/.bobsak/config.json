@@ -1,0 +1,12 @@
+{
+  "version": "0.1.0",
+  "language": "en",
+  "syncProvider": "local",
+  "templates": "en",
+  "autoCommit": false,
+  "createdAt": "2026-02-16T00:00:00.000Z",
+  "updatedAt": "2026-02-16T00:00:00.000Z",
+  "sync": {
+    "lastSyncAt": null
+  }
+}

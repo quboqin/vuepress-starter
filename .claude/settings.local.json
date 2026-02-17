@@ -3,7 +3,11 @@
     "allow": [
       "Bash(grep:*)",
       "Bash(tree:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(mgrep:*)",
+      "Bash(docs/proxy/intranet.md:*)",
+      "Bash(docs/proxy/nas.md:*)",
+      "Skill(bobsak:commit)"
     ],
     "deny": [],
     "ask": []

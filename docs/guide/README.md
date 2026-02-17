@@ -12,3 +12,5 @@ sidebar: auto
 
 ### [OpenWRT](/openwrt/)
 
+### [科学上网完全指南](/proxy/)
+
