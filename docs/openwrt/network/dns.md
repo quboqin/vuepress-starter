@@ -6,6 +6,297 @@ DNS（Domain Name System）配置是 OpenWRT 路由器正常工作的关键环�
 
 本指南详细介绍 OpenWRT 中 DNS 的工作原理、配置方法和故障排除，让您能够深入理解并灵活配置各种复杂的网络环境。
 
+---
+
+## 📊 OpenWRT DNS 解析全流程图解
+
+### 1. 标准 DNS 解析流程
+
+```mermaid
+sequenceDiagram
+    participant Client as 客户端设备
+    participant Router as OpenWRT 路由器
+    participant Dnsmasq as dnsmasq<br/>端口 53
+    participant Cache as 本地缓存
+    participant ChinaDNS as ChinaDNS-NG<br/>/ MosDNS
+    participant Domestic as 国内 DNS<br/>114.114.114.114
+    participant ProxyDNS as 代理 DNS<br/>1.1.1.1
+    participant Root as 根 DNS
+    participant TLD as 顶级域 DNS
+    participant Auth as 权威 DNS
+
+    Note over Client,Auth: 第一阶段：本地解析
+    Client->>Router: DNS 查询 (example.com)
+    Router->>Dnsmasq: 转发到 dnsmasq
+    
+    alt 缓存命中
+        Dnsmasq->>Cache: 查询缓存
+        Cache-->>Dnsmasq: 返回缓存结果
+        Dnsmasq-->>Router: 返回 IP
+        Router-->>Client: DNS 响应
+    else 缓存未命中
+        Note over Dnsmasq,ChinaDNS: 第二阶段：分流判断
+        Dnsmasq->>ChinaDNS: 域名分流检查
+        
+        alt 国内域名
+            ChinaDNS->>Domestic: 转发到国内 DNS
+            Domestic->>Root: 递归查询
+            Root->>TLD: 查询 .com NS
+            TLD->>Auth: 查询 example.com
+            Auth-->>Domestic: 返回 A 记录
+            Domestic-->>ChinaDNS: 返回结果
+            ChinaDNS->>Cache: 缓存结果
+            ChinaDNS-->>Dnsmasq: 返回 IP
+        else 国外域名/被污染域名
+            ChinaDNS->>ProxyDNS: 转发到代理 DNS<br/>(通过 VPN/代理隧道)
+            ProxyDNS-->>ChinaDNS: 返回结果
+            ChinaDNS->>Cache: 缓存结果
+            ChinaDNS-->>Dnsmasq: 返回 IP
+        end
+        
+        Dnsmasq-->>Router: 返回解析结果
+        Router-->>Client: DNS 响应
+    end
+```
+
+### 2. 代理环境下的 DNS 架构图
+
+```mermaid
+flowchart TB
+    subgraph 客户端层
+        PC[电脑/手机]
+        TV[智能电视]
+        IOT[IoT设备]
+    end
+    
+    subgraph OpenWRT路由器
+        subgraph DNS服务层
+            DNS53[dnsmasq<br/>监听 0.0.0.0:53]
+            MOS[MosDNS<br/>监听 127.0.0.1:5335]
+            ADH[AdGuard Home<br/>监听 127.0.0.1:54]
+            SMART[SmartDNS<br/>监听 127.0.0.1:6053]
+        end
+        
+        subgraph 分流决策层
+            CHINA[ChinaDNS-NG<br/>国内域名判定]
+            GFWLIST[GFWList<br/>匹配规则]
+            GEOIP[GeoIP<br/>地理位置库]
+        end
+        
+        subgraph 代理层
+            CLASH[OpenClash<br/>端口 7892/7874]
+            PASS[Passwall<br/>端口 1053]
+            SSR[SSR-Plus<br/>端口 5300]
+        end
+        
+        subgraph 防火墙规则
+            HIJACK[DNS 劫持<br/>iptables/nftables<br/>PREROUTING 53]
+            REDIRECT[透明代理<br/>TPROXY/REDIRECT]
+        end
+    end
+    
+    subgraph 外部网络
+        ISPDNS[运营商 DNS<br/>202.96.x.x]
+        PUBDNS[公共 DNS<br/>114.114/阿里/腾讯]
+        DOT[DoH/DoT<br/>加密 DNS]
+        VPNDNS[代理 DNS<br/>1.1.1.1/8.8.8.8]
+    end
+    
+    PC -->|DNS 查询| DNS53
+    TV -->|DNS 查询| DNS53
+    IOT -->|DNS 查询| DNS53
+    
+    DNS53 -->|国内域名| CHINA
+    DNS53 -->|需要过滤| ADH
+    DNS53 -->|高级分流| MOS
+    
+    CHINA -->|直连| PUBDNS
+    CHINA -->|GFWList匹配| GFWLIST
+    
+    GFWLIST -->|走代理| CLASH
+    GEOIP -->|国外IP| CLASH
+    
+    CLASH -->|隧道| VPNDNS
+    PASS -->|隧道| VPNDNS
+    SSR -->|隧道| VPNDNS
+    
+    MOS -->|分流| SMART
+    SMART -->|国内| PUBDNS
+    SMART -->|国外| DOT
+    
+    ADH -->|转发| DNS53
+    
+    HIJACK -.->|强制劫持| DNS53
+    REDIRECT -.->|透明转发| CLASH
+```
+
+### 3. DNS 请求数据流向图
+
+```mermaid
+flowchart LR
+    A[客户端<br/>192.168.1.x] -->|UDP/TCP 53| B{OpenWRT<br/>路由器}
+    B -->|PREROUTING| C{劫持判断}
+    
+    C -->|未劫持| D[外部 DNS<br/>8.8.8.8:53]
+    C -->|已劫持| E[dnsmasq:53]
+    
+    E -->|配置检查| F{/etc/config/dhcp}
+    F -->|server列表| G[上游 DNS 选择]
+    
+    G -->|国内| H[223.5.5.5]
+    G -->|国外| I[通过代理隧道]
+    
+    I -->|加密| J[DoH:443]
+    I -->|TLS| K[DoT:853]
+    I -->|TCP| L[TCP:53]
+    
+    H --> M[返回结果]
+    J --> M
+    K --> M
+    L --> M
+    M --> E
+    E --> B
+    B -->|DNAT| A
+    
+    style D fill:#ffcccc
+    style E fill:#ccffcc
+    style I fill:#ffffcc
+```
+
+---
+
+## 🚨 DNS 泄露深度分析
+
+### 什么是 DNS 泄露？
+
+**DNS 泄露** 是指在使用 VPN 或代理服务时，DNS 请求没有通过加密隧道传输，而是直接发送到本地 ISP 的 DNS 服务器，导致：
+
+1. **隐私暴露**: ISP 可以记录你访问的网站
+2. **定位暴露**: 真实 IP 地址和地理位置被泄露
+3. **审查绕过失败**: GFW 可以通过 DNS 污染继续干扰
+4. **反诈提醒**: 某些省份会收到运营商的反诈短信或页面劫持
+
+### DNS 泄露场景图解
+
+```mermaid
+flowchart TB
+    subgraph 安全场景[✅ 无泄露 - 所有 DNS 走代理隧道]
+        A1[客户端] -->|DNS 查询| B1[OpenWRT]
+        B1 -->|劫持| C1[代理插件]
+        C1 -->|加密隧道| D1[海外 DNS<br/>1.1.1.1]
+        D1 -.->|ISP 只能看到加密流量| E1[ISP 网络]
+        style D1 fill:#90EE90
+    end
+    
+    subgraph 泄露场景1[❌ 泄露场景1 - 客户端自定义 DNS]
+        A2[客户端<br/>设置 8.8.8.8] -->|直连 DNS| E2[ISP 网络]
+        E2 -->|明文查询| D2[Google DNS<br/>8.8.8.8]
+        D2 -.->|被 GFW 污染| F2[错误 IP/劫持]
+        style A2 fill:#FFB6C1
+        style E2 fill:#FFB6C1
+    end
+    
+    subgraph 泄露场景2[❌ 泄露场景2 - 劫持规则失效]
+        A3[客户端] -->|DNS 查询| B3[OpenWRT]
+        B3 -.->|iptables 规则<br/>配置错误| C3[绕过劫持]
+        C3 -->|直连| E3[ISP DNS<br/>202.96.x.x]
+        style C3 fill:#FFB6C1
+        style E3 fill:#FFB6C1
+    end
+    
+    subgraph 泄露场景3[❌ 泄露场景3 - IPv6 DNS 泄露]
+        A4[客户端] -->|AAAA 查询| B4[OpenWRT]
+        B4 -->|IPv6 未劫持| E4[ISP IPv6 DNS]
+        style B4 fill:#FFB6C1
+        style E4 fill:#FFB6C1
+    end
+    
+    subgraph 泄露场景4[❌ 泄露场景4 - 规则绕过]
+        A5[客户端] -->|DoH/DoT 查询| B5[OpenWRT]
+        B5 -.->|仅劫持 53 端口| C5[直接访问<br/>cloudflare-dns.com]
+        C5 --> E5[ISP 网络]
+        style C5 fill:#FFB6C1
+    end
+```
+
+### DNS 泄露检测方法
+
+#### 1. 在线检测工具
+
+```bash
+# 访问以下网站检测 DNS 泄露
+https://browserleaks.com/dns
+https://ipleak.net/
+https://www.dnsleaktest.com/
+```
+
+**检测结果解读：**
+- ✅ **无泄露**: 只显示代理/VPN 所在国家的 DNS 服务器
+- ❌ **有泄露**: 列表中出现中国大陆的 DNS 服务器（如 202.96.x.x, 114.114.x.x 等）
+
+#### 2. 命令行检测
+
+```bash
+# 方法1：使用 nslookup 检测当前使用的 DNS
+nslookup example.com
+# 观察 Server 字段显示的 IP
+
+# 方法2：使用 dig 追踪查询路径
+dig +trace www.google.com
+# 检查每个查询步骤的服务器
+
+# 方法3：检查路由器 DNS 配置
+uci show dhcp.@dnsmasq[0]
+cat /tmp/resolv.conf.d/resolv.conf.auto
+
+# 方法4：抓包分析 DNS 流量
+tcpdump -i any port 53 -n
+# 观察是否有明文 DNS 流量绕过代理
+```
+
+#### 3. 防火墙连接追踪检测
+
+```bash
+# 检查 NAT 表中 DNS 连接状态
+iptables -t nat -L PREROUTING -v -n | grep 53
+
+# 检查 mangle 表（TPROXY 模式）
+iptables -t mangle -L PREROUTING -v -n
+
+# 查看当前建立的 DNS 连接
+conntrack -L -p udp --dport 53
+conntrack -L -p tcp --dport 53
+```
+
+### DNS 泄露根本原因分析
+
+```mermaid
+mindmap
+  root((DNS 泄露))
+    客户端配置问题
+      手动设置 DNS
+      使用 DoH/DoT 绕过劫持
+      浏览器内置 DNS
+      设备自带 DNS
+    路由器配置问题
+      劫持规则未生效
+      IPv6 未处理
+      防火墙规则冲突
+      端口转发错误
+    代理配置问题
+      DNS 模式错误
+      节点 DNS 设置
+      绕过大陆设置
+      规则优先级
+    网络环境问题
+      多网卡设备
+      旁路由不对称路由
+      交换机配置
+      AP 独立 DNS
+```
+
+---
+
 ## DNS 基础原理
 
 ### DNS 查询过程
@@ -312,6 +603,270 @@ docker run -d \
    https://easylist-downloads.adblockplus.org/easylistchina.txt
    ```
 
+## 🔒 DNS 泄露防护完整方案
+
+### 方案一：基础 DNS 劫持（推荐入门）
+
+#### 1. 配置 dnsmasq
+
+```bash
+# 编辑 /etc/config/dhcp
+config dnsmasq
+    option domainneeded '1'
+    option boguspriv '1'
+    option localise_queries '1'
+    option rebind_protection '1'
+    option local '/lan/'
+    option domain 'lan'
+    option expandhosts '1'
+    option authoritative '1'
+    option readethers '1'
+    option leasefile '/tmp/dhcp.leases'
+    option resolvfile '/tmp/resolv.conf.d/resolv.conf.auto'
+    option cachesize '1024'
+    option dnsforwardmax '64'
+    # 关闭默认 DNS 获取
+    option peerdns '0'
+    # 设置上游 DNS
+    list server '223.5.5.5'
+    list server '114.114.114.114'
+```
+
+#### 2. 配置防火墙 DNS 劫持
+
+```bash
+# 编辑 /etc/config/firewall - fw3 版本 (OpenWrt 22.03 之前)
+config redirect
+    option name 'DNS Hijacking'
+    option src 'lan'
+    option proto 'tcp udp'
+    option src_dport '53'
+    option dest_port '53'
+    option target 'DNAT'
+    option family 'ipv4'
+
+# IPv6 劫持
+config redirect
+    option name 'DNS Hijacking IPv6'
+    option src 'lan'
+    option proto 'tcp udp'
+    option src_dport '53'
+    option dest_port '53'
+    option target 'DNAT'
+    option family 'ipv6'
+```
+
+```bash
+# fw4 版本 (OpenWrt 22.03+) - nftables
+# 在 /etc/config/firewall 中添加：
+config redirect 'dns_hijack'
+    option name 'DNS Hijacking'
+    option src 'lan'
+    option proto 'tcp udp'
+    option src_dport '53'
+    option target 'DNAT'
+    option family 'ipv4'
+
+config redirect 'dns_hijack6'
+    option name 'DNS Hijacking IPv6'
+    option src 'lan'
+    option proto 'tcp udp'
+    option src_dport '53'
+    option target 'DNAT'
+    option family 'ipv6'
+```
+
+#### 3. 防止 DoH/DoT 绕过
+
+```bash
+# 劫持常见 DoH/DoT 域名
+# 在 /etc/config/dhcp 中添加：
+config ipset
+    list name 'doh_block'
+    list domain 'cloudflare-dns.com'
+    list domain 'dns.google'
+    list domain 'dns.quad9.net'
+    list domain 'dns.opendns.com'
+    list domain 'doh.dns.apple.com'
+    list domain 'dns.alidns.com'
+    list domain 'doh.pub'
+
+# 在防火墙中阻止这些域名
+config rule
+    option name 'Block DoH'
+    option src 'lan'
+    option dest 'wan'
+    option proto 'tcp udp'
+    option dest_port '443 853'
+    option ipset 'doh_block dest'
+    option target 'DROP'
+```
+
+### 方案二：MosDNS 防泄露配置
+
+```yaml
+# /etc/mosdns/config.yaml
+log:
+  level: info
+  file: "/var/log/mosdns.log"
+
+plugins:
+  # 缓存
+  - tag: cache
+    type: cache
+    args:
+      size: 4096
+      ttl: 3600
+
+  # 国内 DNS 服务器
+  - tag: domestic_dns
+    type: forward
+    args:
+      upstreams:
+        - addr: https://223.5.5.5/dns-query
+        - addr: https://120.53.53.53/dns-query
+      bootstrap: 223.5.5.5
+
+  # 远程 DNS 服务器 (必须走代理)
+  - tag: remote_dns
+    type: forward
+    args:
+      upstreams:
+        - addr: tls://1.1.1.1:853
+        - addr: tls://8.8.8.8:853
+      bootstrap: 1.1.1.1
+      # 确保这些查询走代理
+
+  # 域名分类
+  - tag: geosite_cn
+    type: domain_matcher
+    args:
+      files:
+        - /etc/mosdns/geosite_cn.txt
+
+  - tag: gfwlist
+    type: domain_matcher
+    args:
+      files:
+        - /etc/mosdns/gfwlist.txt
+
+  # 分流逻辑
+  - tag: main_sequence
+    type: sequence
+    args:
+      exec:
+        # 国内域名 -> 国内 DNS
+        - matches: "qname $geosite_cn"
+          exec: domestic_dns
+          fast_return: true
+        
+        # GFWList 域名 -> 远程 DNS (强制走代理)
+        - matches: "qname $gfwlist"
+          exec: remote_dns
+          fast_return: true
+        
+        # 默认远程 DNS
+        - exec: remote_dns
+
+  # 服务器入口
+  - tag: server_udp
+    type: udp_server
+    args:
+      entry: main_sequence
+      listen: 0.0.0.0:5335
+
+  - tag: server_tcp
+    type: tcp_server
+    args:
+      entry: main_sequence
+      listen: 0.0.0.0:5335
+```
+
+### 方案三：OpenClash + AdGuard Home 组合
+
+```mermaid
+flowchart LR
+    A[客户端] -->|DNS 查询:53| B[AdGuard Home<br/>过滤器]
+    B -->|转发| C[OpenClash<br/>DNS:7874]
+    C -->|分流| D{域名类型}
+    D -->|国内| E[国内 DNS]
+    D -->|国外| F[代理 DNS<br/>走代理隧道]
+    E -->|返回| C
+    F -->|加密| G[DoH/DoT<br/>1.1.1.1]
+    G -->|返回| C
+    C --> B
+    B --> A
+```
+
+#### 配置步骤：
+
+1. **AdGuard Home 配置**
+   ```yaml
+   # 监听 53 端口
+   dns:
+     port: 53
+     upstream:
+       - 127.0.0.1:7874  # OpenClash DNS
+     bootstrap:
+       - 223.5.5.5
+   ```
+
+2. **OpenClash DNS 配置**
+   ```yaml
+   dns:
+     enable: true
+     listen: 0.0.0.0:7874
+     enhanced-mode: redir-host
+     nameserver:
+       - 223.5.5.5
+       - 114.114.114.114
+     fallback:
+       - https://1.1.1.1/dns-query
+       - https://8.8.8.8/dns-query
+     fallback-filter:
+       geoip: true
+       geoip-code: CN
+   ```
+
+3. **防火墙规则**
+   ```bash
+   # 强制重定向到 AdGuard Home
+   iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53
+   iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 53
+   ```
+
+### 方案四：SmartDNS 防泄露配置
+
+```bash
+# /etc/smartdns/smartdns.conf
+
+# 基本配置
+bind 0.0.0.0:6053
+cache-size 4096
+rr-ttl-min 60
+rr-ttl-max 86400
+
+# 国内 DNS 组
+server-tcp 223.5.5.5:53 -group china -exclude-default-group
+server-tcp 114.114.114.114:53 -group china -exclude-default-group
+server-https https://223.5.5.5/dns-query -group china -exclude-default-group
+
+# 远程 DNS 组 (确保走代理)
+server-tls 1.1.1.1:853 -group overseas -exclude-default-group
+server-tls 8.8.8.8:853 -group overseas -exclude-default-group
+server-https https://cloudflare-dns.com/dns-query -group overseas -exclude-default-group
+
+# 域名分流规则
+nameserver /cn/ china
+nameserver /taobao.com/ china
+nameserver /baidu.com/ china
+nameserver /google.com/ overseas
+nameserver /youtube.com/ overseas
+nameserver /github.com/ overseas
+```
+
+---
+
 ## 旁路由 DNS 特殊配置
 
 ### 非对称路由问题
@@ -515,6 +1070,82 @@ uci commit dhcp
 /etc/init.d/dnsmasq restart
 ```
 
+#### 5. DNS 泄露问题 🔒
+
+**诊断步骤：**
+```bash
+# 步骤1：在线检测
+curl -s https://ipleak.net/json/ | grep -E '"ip"|"country"'
+
+# 步骤2：检查当前使用的 DNS
+nslookup google.com
+# 观察 Server 字段显示的 IP
+
+# 步骤3：检查 iptables 劫持规则
+iptables -t nat -L PREROUTING -v -n | grep 53
+# 应该看到 REDIRECT 到 53 端口的规则
+
+# 步骤4：抓包检查
+opkg install tcpdump
+tcpdump -i any port 53 -nn -c 20
+# 看是否有 DNS 流量直接发往外部 DNS
+
+# 步骤5：检查是否存在 IPv6 泄露
+ip6tables -t nat -L PREROUTING -v -n | grep 53
+# 如果没有规则，可能导致 IPv6 DNS 泄露
+```
+
+**常见泄露场景及修复：**
+
+| 泄露场景 | 诊断方法 | 修复方案 |
+|----------|----------|----------|
+| **客户端自定义 DNS** | nslookup 显示外部 DNS IP | 在防火墙添加劫持规则 |
+| **IPv6 泄露** | 在线检测显示 IPv6 DNS | 添加 ip6tables 劫持规则或禁用 IPv6 |
+| **DoH/DoT 绕过** | 看到 443/853 端口的 DNS 流量 | 阻断知名 DoH/DoT 域名 |
+| **规则优先级错误** | iptables 规则顺序不正确 | 调整规则顺序，劫持规则放最前面 |
+| **代理插件未接管** | 国外域名仍使用国内 DNS | 检查代理插件 DNS 设置 |
+
+**修复脚本示例：**
+```bash
+#!/bin/sh
+# /usr/bin/fix-dns-leak.sh
+# 一键修复常见 DNS 泄露问题
+
+echo "=== DNS 泄露修复脚本 ==="
+
+# 1. 清除现有规则
+echo "清除现有 DNS 规则..."
+iptables -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53 2>/dev/null
+iptables -t nat -D PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 53 2>/dev/null
+ip6tables -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53 2>/dev/null
+ip6tables -t nat -D PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 53 2>/dev/null
+
+# 2. 添加 IPv4 劫持规则
+echo "添加 IPv4 DNS 劫持规则..."
+iptables -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53
+iptables -t nat -I PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 53
+
+# 3. 添加 IPv6 劫持规则
+if [ -n "$(command -v ip6tables)" ]; then
+    echo "添加 IPv6 DNS 劫持规则..."
+    ip6tables -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53
+    ip6tables -t nat -I PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 53
+fi
+
+# 4. 禁用 AAAA 记录过滤
+echo "禁用 IPv6 AAAA 记录..."
+uci set dhcp.@dnsmasq[0].filter_aaaa='1'
+uci commit dhcp
+
+# 5. 重启服务
+echo "重启 DNS 服务..."
+/etc/init.d/dnsmasq restart
+/etc/init.d/firewall restart
+
+echo "=== 修复完成 ==="
+echo "请访问 https://ipleak.net 验证是否修复成功"
+```
+
 ## 监控与维护
 
 ### DNS 性能监控
@@ -669,3 +1300,92 @@ config global_forwarding
 6. **诊断和排除故障**保证系统稳定
 
 记住，DNS 配置是一个系统工程，需要根据具体网络环境和需求进行调整。建议在生产环境中部署前，先在测试环境中充分验证配置的正确性和稳定性。
+
+---
+
+## ✅ DNS 配置检查清单
+
+在部署或修改 DNS 配置后，使用以下清单确保配置正确：
+
+### 基础配置检查
+- [ ] dnsmasq 监听在 0.0.0.0:53
+- [ ] 上游 DNS 服务器设置正确
+- [ ] 缓存大小配置合理（1024-4096）
+- [ ] IPv6 AAAA 记录过滤已启用（可选）
+
+### 安全防护检查
+- [ ] **DNS 劫持规则已启用** (iptables/nftables)
+- [ ] **IPv6 DNS 劫持规则已添加**
+- [ ] **DoH/DoT 绕过已处理**（阻断或劫持）
+- [ ] **客户端自定义 DNS 被强制重定向**
+
+### 代理集成检查
+- [ ] 代理插件 DNS 监听正确
+- [ ] 分流规则生效
+- [ ] 远程 DNS 走代理隧道
+- [ ] 国内域名直连解析
+
+### 泄露检测检查
+- [ ] 访问 https://ipleak.net 检测无泄露
+- [ ] 访问 https://browserleaks.com/dns 验证
+- [ ] 命令行 `nslookup` 显示预期 DNS
+- [ ] 抓包检查无未加密 DNS 流量
+
+### 旁路由特殊检查（如适用）
+- [ ] 非对称路由已处理
+- [ ] IP 动态伪装已启用
+- [ ] 丢弃无效数据包已禁用
+- [ ] WiFi 设备 DNS 正常
+
+---
+
+## 🔧 快速命令参考
+
+```bash
+# 常用诊断命令速查
+
+# 查看当前 DNS 配置
+uci show dhcp.@dnsmasq[0]
+
+# 检查 dnsmasq 进程
+ps | grep dnsmasq
+
+# 查看监听端口
+netstat -tlnp | grep :53
+
+# 检查 iptables 劫持规则
+iptables -t nat -L PREROUTING -v -n | grep 53
+
+# 测试 DNS 解析
+nslookup google.com
+nslookup baidu.com
+
+# 使用 dig 详细查询
+dig @127.0.0.1 www.google.com
+dig +trace www.google.com
+
+# 检查 DNS 泄露（命令行）
+curl -s https://ipleak.net/json/ | jq
+
+# 重启所有 DNS 相关服务
+/etc/init.d/dnsmasq restart
+/etc/init.d/firewall restart
+/etc/init.d/passwall restart  # 如使用
+/etc/init.d/openclash restart # 如使用
+
+# 查看日志
+tail -f /tmp/dnsmasq.log
+tail -f /var/log/messages | grep dns
+
+# 抓包分析（需要安装 tcpdump）
+opkg install tcpdump
+tcpdump -i any port 53 -nn -v
+tcpdump -i any 'port 53 or port 443 or port 853' -nn
+
+# 清理 DNS 缓存
+kill -HUP $(pidof dnsmasq)
+
+# 备份配置
+uci export dhcp > /root/dhcp-backup.conf
+uci export firewall > /root/firewall-backup.conf
+```
